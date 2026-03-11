@@ -1,3 +1,4 @@
+require('dotenv').config();
 const path = require('path');
 
 /**
@@ -11,19 +12,18 @@ const path = require('path');
 module.exports = {
     BOT_TOKEN: process.env.BOT_TOKEN,
     OPENROUTER_KEY: process.env.OPENROUTER_KEY,
-    ADMIN_ID: process.env.ADMIN_ID,
-    BROADCAST_LOG: './data/broadcasts.json',  
-    SETTINGS_FILE: path.join(__dirname, 'settings.json'),
-    HISTORY_FILE: path.join(__dirname, 'history.json'),
+    HF_TOKEN: process.env.HF_TOKEN,
+    ADMIN_ID: parseInt(process.env.ADMIN_ID),  
+   SETTINGS_FILE: path.join(__dirname, '..', 'data', 'settings.json'),
+    HISTORY_FILE: path.join(__dirname, '..', 'data', 'history.json'),
+    BROADCAST_LOG: path.join(__dirname, '..', 'data', 'broadcasts.json'),
      MAX_HISTORY_DAYS: 3,
-    DEFAULT_MODEL: 'deepseek/deepseek-chat:free',
+    DEFAULT_MODEL: 'qwen/qwen-2.5-72b-instruct',
     MAX_HISTORY: 10,
      MODELS: {
-        'DeepSeek': 'deepseek/deepseek-chat:free',
-        'MistralNemo': 'mistralai/mistral-nemo',
-        'Qwen': 'qwen/qwen-2.5-72b-instruct',
-        'Llama': 'meta-llama/llama-3.3-70b-instruct',
-        'Gemma': 'google/gemma-2-27b-it',
-        'llama (поиск в интернете)': 'perplexity/llama-3.1-sonar-small-128k-online:free'
+        'Qwen 3.5(HF)': 'hf:Qwen/Qwen3.5-27B',
+        'Qwen 2.5(OR)': 'qwen/qwen-2.5-72b-instruct',
+        'Llama(HF)': 'hf:meta-llama/Llama-3.1-8B-Instruct',
+        'Gemma': 'google/gemma-2-9b-it:free'
     }
 };

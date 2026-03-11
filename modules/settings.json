@@ -43,7 +43,7 @@
     "40": "0",
     "41": "5",
     "model": "stabilityai/stable-diffusion-3",
-    "selectedModel": "qwen/qwen-2.5-72b-instruct",
+    "selectedModel": "mistralai/mistral-nemo",
     "mode": "short"
   },
   "5267940128": {
