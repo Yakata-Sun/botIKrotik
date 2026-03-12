@@ -13,6 +13,7 @@ module.exports = {
     BOT_TOKEN: process.env.BOT_TOKEN,
     OPENROUTER_KEY: process.env.OPENROUTER_KEY,
     HF_TOKEN: process.env.HF_TOKEN,
+    SERPER_API_KEY: process.env.SERPER_API_KEY,
     ADMIN_ID: parseInt(process.env.ADMIN_ID),  
    SETTINGS_FILE: path.join(__dirname, '..', 'data', 'settings.json'),
     HISTORY_FILE: path.join(__dirname, '..', 'data', 'history.json'),
@@ -24,6 +25,7 @@ module.exports = {
         'Qwen 3.5(HF)': 'hf:Qwen/Qwen3.5-27B',
         'Qwen 2.5(OR)': 'qwen/qwen-2.5-72b-instruct',
         'Llama(HF)': 'hf:meta-llama/Llama-3.1-8B-Instruct',
-        'Gemma': 'google/gemma-2-9b-it:free'
+        'DeepSeek (Обычный)': 'deepseek/deepseek-chat',
+    '🌍 Поиск в Google': 'search:Qwen/Qwen2.5-72B-Instruct' // Модель Qwen будет "думать" над результатами поиск
     }
 };

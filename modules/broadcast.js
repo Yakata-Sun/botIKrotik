@@ -1,37 +1,53 @@
 const storage = require('./storage');
 const config = require('./config');
+const { Markup } = require('telegraf'); // Добавляем для кнопок
 
 /**
- * Функция массовой рассылки
- * @param {Object} ctx - Контекст Telegraf
- * @param {Object} userSettings - Объект со всеми пользователями
- * @param {Object} menus - Модуль меню
- * @param {String} text - Текст сообщения
- * @param {String|null} photoId - ID фото (если есть)
+ * @param {Object} ctx 
+ * @param {Object} userSettings 
+ * @param {Object} menus 
+ * @param {Object} content - { text, photo, file, url }
  */
-async function startBroadcast(ctx, userSettings, menus, text, photoId = null) {
+async function startBroadcast(ctx, userSettings, menus, content) {
     const allIds = Object.keys(userSettings);
     let success = 0;
     let failed = 0;
 
     await ctx.reply(`📢 Запуск рассылки на ${allIds.length} чел...`, menus.main());
 
+    // Создаем инлайн-кнопку, если в тексте или настройках есть ссылка
+    // (Или если вы передали url отдельно)
+    const extra = {};
+    if (content.url) {
+        extra.reply_markup = Markup.inlineKeyboard([
+            [Markup.button.url('🔗 Перейти на сайт', content.url)]
+        ]).reply_markup;
+    }
+
     for (const id of allIds) {
         try {
-            if (photoId) {
-                // Рассылка с ФОТО
-                await ctx.telegram.sendPhoto(id, photoId, { 
-                    caption: text, 
-                    ...menus.main() 
+            if (content.photo) {
+                // Рассылка ФОТО + ТЕКСТ
+                await ctx.telegram.sendPhoto(id, content.photo, { 
+                    caption: content.text, 
+                    ...extra 
+                });
+            } else if (content.file) {
+                // Рассылка PDF/ДОКУМЕНТ + ТЕКСТ
+                await ctx.telegram.sendDocument(id, content.file, { 
+                    caption: content.text, 
+                    ...extra 
                 });
             } else {
                 // Рассылка ТОЛЬКО ТЕКСТ
-                await ctx.telegram.sendMessage(id, text, menus.main());
+                await ctx.telegram.sendMessage(id, content.text, extra);
             }
+            
             success++;
-            // Задержка 50мс, чтобы не получить бан от Telegram (ограничение 30 сообщений в секунду)
+            // Пауза 50мс для соблюдения лимитов Telegram
             await new Promise(r => setTimeout(r, 50)); 
         } catch (e) {
+            // Если пользователь заблокировал бота, удалять его из базы не будем, но в лог запишем
             console.error(`Ошибка отправки пользователю ${id}:`, e.message);
             failed++;
         }
@@ -41,8 +57,8 @@ async function startBroadcast(ctx, userSettings, menus, text, photoId = null) {
     const logData = storage.load(config.BROADCAST_LOG) || [];
     logData.push({
         date: new Date().toLocaleString('ru-RU'),
-        text: text,
-        hasPhoto: !!photoId,
+        text: content.text,
+        type: content.photo ? 'photo' : (content.file ? 'document' : 'text'),
         stats: { total: allIds.length, success, failed }
     });
     storage.save(config.BROADCAST_LOG, logData);

@@ -1,44 +1,60 @@
-/**
- * @module AI
- * @description Диспетчер запросов к разным провайдерам (OpenRouter и Hugging Face).
-* Обеспечивает отправку истории сообщений нейросети и получение текстового ответа.
- */
 const { HfInference } = require('@huggingface/inference');
+const searchProvider = require('./search');
 const axios = require('axios');
 const config = require('./config');
 
 const hf = new HfInference(config.HF_TOKEN);
 
 const ai = {
-   /**
-     * Запрашивает генерацию текста у выбранной модели ИИ.
-     * @async
-     * @param {Array<Object>} messages - Массив объектов истории сообщений.
-     * @param {string} messages[].role - Роль отправителя ('user' или 'assistant').
-     * @param {string} messages[].content - Текст сообщения.
-     * @param {string} model - Идентификатор модели в OpenRouter (например, 'google/gemma-2-9b-it:free').
-     * @param {boolean} isShortMode - Флаг режима ответа (true для краткого, false для детального).
-     * @returns {Promise<Object>} Объект ответа от Axios с данными из OpenRouter API.
-     * @throws {Error} Выбрасывает ошибку при сетевом сбое или некорректном ответе от API.
+    /**
+     * ГЛАВНЫЙ ДИСПЕТЧЕР
      */
+    async getAIResponse(messages, modelId, isShortMode) {
+        // 1. ЛОГИКА ПОИСКА (с использованием Hugging Face)
+        if (modelId.startsWith('search:')) {
+            const realModel = modelId.replace('search:', '');
+            return await this.callSearchWithHF(messages, realModel, isShortMode);
+        }
 
-   async getAIResponse(messages, modelId, isShortMode) {
-        // Если ID модели начинается с hf:, идем на Hugging Face
+        // 2. ОБЫЧНЫЙ HUGGING FACE
         if (modelId.startsWith('hf:')) {
             const realModel = modelId.replace('hf:', '');
             return await this.callHuggingFace(messages, realModel, isShortMode);
         }
 
-        // Иначе идем на OpenRouter (по умолчанию)
+        // 3. OPENROUTER (по умолчанию)
         return await this.callOpenRouter(messages, modelId, isShortMode);
     },
 
     /**
-     * Вызов Hugging Face Inference API
+     * МЕТОД ПОИСКА: serper Hugging Face
+     */
+    async callSearchWithHF(messages, model, isShortMode) {
+        try {
+            const userQuery = messages[messages.length - 1].content;
+            console.log(`🔎 Выполняю поиск: ${userQuery}`);
+ const webContext = await searchProvider.getContext(userQuery);
+
+    const enrichedPrompt = [{
+        role: 'user',
+        content: `Используй данные для ответа: ${webContext}\n\nВопрос: ${userQuery}`
+    }];
+
+            // Вызываем уже готовый метод callHuggingFace
+            // Передаем новый промпт вместо старой истории
+            return await this.callHuggingFace(enrichedPrompt, model, isShortMode);
+
+        } catch (e) {
+            console.error('Ошибка поиска через HF:', e.message);
+            throw e;
+        }
+    },
+
+    /**
+     * ВЫЗОВ HUGGING FACE
      */
     async callHuggingFace(messages, model, isShortMode) {
         try {
-            // Формируем промпт (HF часто требует текст, а не массив, но SDK это правит)
             const response = await hf.chatCompletion({
                 model: model,
                 messages: messages.map(m => ({ role: m.role, content: m.content })),
@@ -46,7 +62,6 @@ const ai = {
                 temperature: 0.7,
             });
 
-            // Приводим ответ HF к формату, который ждет ваш bot.js (как у axios)
             return {
                 data: {
                     choices: [{
@@ -63,29 +78,17 @@ const ai = {
     },
 
     /**
-     * Ваш текущий метод для OpenRouter
+     * ВЫЗОВ OPENROUTER
      */
     async callOpenRouter(messages, model, isShortMode) {
-        // Очищаем историю от пустых полей и timestamp для API
         const cleanMessages = messages
             .filter(m => m && m.content && m.content.trim() !== "")
-            .map(m => ({ 
-                role: m.role, 
-                content: String(m.content).trim() 
-            }));
-
-        if (cleanMessages.length === 0) {
-            throw new Error("Пустой запрос (нет сообщений)");
-        }
+            .map(m => ({ role: m.role, content: String(m.content).trim() }));
 
         try {
             const response = await axios.post(
-      "https://openrouter.ai/api/v1/chat/completions",
-                      {
-                    model: model,
-                    messages: cleanMessages,
-                    max_tokens: isShortMode ? 500 : 2000,
-                },
+                "https://openrouter.ai/api/v1/chat/completions",
+                { model, messages: cleanMessages, max_tokens: isShortMode ? 500 : 2000 },
                 {
                     headers: {
                         'Authorization': `Bearer ${config.OPENROUTER_KEY.trim()}`,
@@ -93,18 +96,14 @@ const ai = {
                         'HTTP-Referer': 'http://localhost:3000',
                         'X-Title': 'Yakata Bot'
                     },
-                    timeout: 45000 // Ждем ответ до 45 секунд
+                    timeout: 45000
                 }
             );
             return response;
         } catch (e) {
-            if (e.code === 'ECONNRESET') {
-                console.error('Сеть оборвала соединение (ECONNRESET).');
-            }
             throw e;
         }
     }
 };
-
 
 module.exports = ai;

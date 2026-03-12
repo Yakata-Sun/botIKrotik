@@ -7,6 +7,7 @@ const menus = require('./modules/menus');
 const handleMenu = require('./modules/handlers');
 const registerCommands = require('./modules/commands');
 const startBroadcast = require('./modules/broadcast');
+const handleBroadcast = require('./modules/broadcastHandler');
 
 const bot = new Telegraf(config.BOT_TOKEN);
 
@@ -22,74 +23,18 @@ bot.on('message', async (ctx) => {
     const userId = ctx.from.id;
 
     // 1. Инициализация (всегда первая)
-  // 1. Инициализация (если данных нет)
 if (!userSettings[userId]) {
     userSettings[userId] = { selectedModel: config.DEFAULT_MODEL, mode: 'short' };
     storage.save(config.SETTINGS_FILE, userSettings); // Сохраняем нового юзера сразу
 }
     if (!userHistory[userId]) userHistory[userId] = [];
 
-    const admin = userSettings[userId];
+   // 2. ЛОГИКА РАССЫЛКИ (broadcastHandler.js)
+    // Если функция вернула true, значит сообщение обработано как часть рассылки, стопаем выполнение
+    const isBroadcastAction = await handleBroadcast(ctx, userSettings, menus, startBroadcast);
+    if (isBroadcastAction) return;
 
-    // =====================================================
-    // ЛОГИКА РАССЫЛКИ (Должна быть ПЕРЕД логикой ИИ)
-    // =====================================================
-    if (userId === config.ADMIN_ID) {
-        // ШАГ 1: Ожидание контента
-        if (admin?.waitingForBroadcastPhoto) {
-            if (text === '❌ Отмена') {
-                admin.waitingForBroadcastPhoto = false;
-                return ctx.reply('Рассылка отменена.', menus.main());
-            }
-            if (ctx.message.photo) {
-                admin.broadcastPhotoId = ctx.message.photo[ctx.message.photo.length - 1].file_id;
-                admin.waitingForBroadcastPhoto = false;
-                admin.waitingForBroadcastText = true;
-                return ctx.reply('📸 Фото принято. Пришлите текст описания:');
-            }
-            if (text) {
-                admin.broadcastDraftText = text;
-                admin.broadcastPhotoId = null;
-                admin.waitingForBroadcastPhoto = false;
-                admin.waitingForConfirm = true;
-                return ctx.reply(`Предпросмотр сообщения:\n\n${text}`, menus.confirmBroadcast());
-            }
-        }
-
-        // ШАГ 2: Ожидание текста (после фото)
-        if (admin?.waitingForBroadcastText && text) {
-            admin.broadcastDraftText = text;
-            admin.waitingForBroadcastText = false;
-            admin.waitingForConfirm = true;
-            return ctx.sendPhoto(admin.broadcastPhotoId, {
-                caption: `Предпросмотр сообщения:\n\n${text}`,
-                ...menus.confirmBroadcast()
-            });
-        }
-
-        // ШАГ 3: Подтверждение
-        if (admin?.waitingForConfirm) {
-            if (text === '✅ Отправить всем') {
-                admin.waitingForConfirm = false;
-                const finalPhoto = admin.broadcastPhotoId;
-                const finalText = admin.broadcastDraftText;
-                admin.broadcastPhotoId = null;
-                admin.broadcastDraftText = null;
-                // ВАЖНО: Передаем аргументы правильно для вашего модуля
-                return startBroadcast(ctx, userSettings, menus, finalText, finalPhoto);
-            }
-            if (text === '❌ Отмена') {
-                admin.waitingForConfirm = false;
-                admin.broadcastPhotoId = null;
-                admin.broadcastDraftText = null;
-                return ctx.reply('Рассылка отменена.', menus.main());
-            }
-        }
-    }
-
-    // =====================================================
-    // ОБЫЧНАЯ ЛОГИКА (Если не в режиме рассылки)
-    // =====================================================
+    // 3. Если не в режиме рассылки
     if (!text) return; // Для ИИ нам нужен только текст
  // Сначала обрабатываем меню и кнопки переключения (они обновят userSettings в памяти)
     const menuHandled = await handleMenu(ctx, userSettings);
@@ -106,7 +51,7 @@ if (!userSettings[userId]) {
     const model = userSettings[userId].selectedModel || config.DEFAULT_MODEL;
     const isShortMode = userSettings[userId].mode === 'short';
     console.log(model);
-    // 5. Логика ИИ
+    // 4. отправка запроса к ии
         try {
         await ctx.sendChatAction('typing');
 
