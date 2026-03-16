@@ -12,9 +12,10 @@ const menus = require("./menus");
  * @async
  * @param {Object} ctx - Контекст сообщения Telegraf.
  * @param {Object} userSettings - Общий объект настроек всех пользователей.
+ * @param {Object} userHistory - История сообщений (добавили параметр).
  * @returns {Promise<boolean>} Возвращает true, если кнопка обработана, иначе false (для передачи сообщения в ИИ).
  */
-module.exports = async (ctx, userSettings) => {
+module.exports = async (ctx, userSettings, userHistory) => {
   const text = ctx.message.text;
   const userId = ctx.from.id;
   const settings = userSettings[userId];
@@ -29,11 +30,13 @@ module.exports = async (ctx, userSettings) => {
       return await ctx.reply("Главное меню:", menus.main());
 
     case "❓ Справка":
-      return await ctx.reply("Я — И-Кротик. Помогаю общаться с ИИ и узнавать об услугах Марии.");
+      return await ctx.reply("Я — И-Кротик. Помогаю общаться с ИИ и делюсь полезностями от Марии.");
 
     // --- КАТЕГОРИИ УСЛУГ ---
     case "💎 Услуги":
     case "⬅️ Назад в услуги":
+            console.log('Нажата кнопка услуг. Объект menus существует:', !!menus);
+      console.log('Метод buy существует:', !!menus?.buy);
       return await ctx.reply("Выберите интересующее направление:", menus.buy());
 
     case "🎓 Тренинги":
@@ -45,6 +48,7 @@ module.exports = async (ctx, userSettings) => {
     // --- ЛОГИКА ВОПРОСА ---
     case "✍️ Задать вопрос":
       settings.waitingForAuthor = true; // Ставим флаг ожидания текста
+      
       return await ctx.reply(
         "Просто напиши свой вопрос следующим сообщением! Я передам его Марии.",
         { reply_markup: { remove_keyboard: true } } // Убираем кнопки, чтобы не мешали вводу
@@ -67,26 +71,55 @@ module.exports = async (ctx, userSettings) => {
       settings.mode = "long";
       storage.save(config.SETTINGS_FILE, userSettings);
       return await ctx.reply("📖 Режим: Детальные ответы. Пишу развернуто и глубоко.", menus.chatAI(settings));
+   // --- ОЧИСТКА КОНТЕКСТА ---
+    case "🧹 Очистить контекст":
+      // Обнуляем массив истории для этого пользователя
+      userHistory[userId] = []; 
+      // Сохраняем изменения в файл через модуль storage
+      storage.save(config.HISTORY_FILE, userHistory);
+      
+      return await ctx.reply(
+        "🧹 Контекст очищен! ИИ больше не помнит нашу предыдущую переписку.", 
+        menus.chatAI(settings)
+      );
 
     // --- ОБРАБОТКА КОНКРЕТНЫХ УСЛУГ: ТРЕНИНГИ ---
-    case "🧘 Личная Сказка":
-      return await ctx.reply("✨ *Личная Сказка* — это методика глубокой трансформации через метафоры. Помогает найти ответы внутри себя.\n\nДля записи: @sherab_wangmo", { parse_mode: 'Markdown' });
+    case "✨ Личная Сказка":
+      return await ctx.reply(
+        "✨ <b>Личная Сказка</b> — это методика глубокой трансформации через метафоры. Помогает найти ответы внутри себя.\n\nЗаписаться: @sherab_wangmo", 
+        { parse_mode: 'HTML' }
+      );
 
     case "📈 Быстрый Коучинг":
-      return await ctx.reply("🚀 *Быстрый Коучинг* — фокус-сессия для решения конкретного запроса здесь и сейчас.\n\nЗаписаться: @sherab_wangmo", { parse_mode: 'Markdown' });
+      return await ctx.reply(
+        "📈 <b>Быстрый Коучинг</b> — фокус-сессия для решения конкретного запроса здесь и сейчас.\n\nЗаписаться: @sherab_wangmo", 
+        { parse_mode: 'HTML' }
+      );
 
     // --- ОБРАБОТКА КОНКРЕТНЫХ УСЛУГ: РАЗРАБОТКА ---
     case "🤖 Создание ботов":
-      return await ctx.reply("🤖 *Создание ботов* — разработка сложных систем, интеграция ИИ и автоматизация бизнеса.\n\nОбсудить проект: @sherab_wangmo", { parse_mode: 'Markdown' });
+      return await ctx.reply(
+        "🤖 <b>Создание ботов</b> — разработка сложных систем, интеграция ИИ и автоматизация бизнеса.\n\nОбсудить проект: @sherab_wangmo", 
+        { parse_mode: 'HTML' }
+      );
 
     case "⚙️ Создание лендинга":
-      return await ctx.reply("🖥 *Создание лендинга* — продающие страницы с современным дизайном и высокой конверсией.");
+      return await ctx.reply(
+        "⚙️ <b>Создание лендинга</b> — продающие страницы с современным дизайном и высокой конверсией.\n\nОбсудить проект: @sherab_wangmo",
+        { parse_mode: 'HTML' }
+      );
 
     case "🤖 Доработка ботов":
-      return await ctx.reply("🛠 *Доработка ботов* — исправление ошибок, добавление новых функций и оптимизация вашего текущего бота.");
+      return await ctx.reply(
+        "🤖 <b>Доработка ботов</b> — исправление ошибок, добавление новых функций и оптимизация вашего текущего бота.\n\nОбсудить проект: @sherab_wangmo",
+        { parse_mode: 'HTML' }
+      );
 
-    case "⚙️ Frontend-разработка":
-      return await ctx.reply("🎨 *Frontend-разработка* — создание интерфейсов на React/Vue, верстка и оживление макетов.");
+    case "⚙️ Web-разработка":
+      return await ctx.reply(
+        "⚙️ <b>Web-разработка</b> — создание интерфейсов, верстка, оживление макетов, backend-разработка на Node.js.\n\nОбсудить проект: @sherab_wangmo",
+        { parse_mode: 'HTML' }
+      );
 
     default:
       // Если текст не совпал ни с одной кнопкой, возвращаем false.

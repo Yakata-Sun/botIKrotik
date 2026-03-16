@@ -35,7 +35,8 @@ module.exports = {
                         { text: isShort ? '✅ ⚡️ Быстро' : '⚡️ Быстро (Кратко)' },
                         { text: !isShort ? '✅ 📚 Подробно' : '📚 Подробно (Детально)' }
                     ],
-                    [{ text: '🤖 Сменить модель' }, { text: '⬅️ Назад' }]
+                     [{ text: '🤖 Сменить модель' }, { text: '🧹 Очистить контекст' }], 
+                [{ text: '⬅️ Назад' }]
                 ],
                 resize_keyboard: true,
                 persistent: true
@@ -82,10 +83,11 @@ module.exports = {
     trainings: () => ({
         reply_markup: {
             keyboard: [
-                [{ text: '🧘 Личная Сказка' }, { text: '📈 Быстрый Коучинг' }],
+                [{ text: '✨ Личная Сказка' }, { text: '📈 Быстрый Коучинг' }],
                 [{ text: '⬅️ Назад в услуги' }]
             ],
-            resize_keyboard: true
+            resize_keyboard: true,
+            persistent: true 
         }
     }),
 
@@ -97,7 +99,7 @@ module.exports = {
         reply_markup: {
             keyboard: [
                 [{ text: '🤖 Создание ботов' }, { text: '⚙️ Создание лендинга' }],
-                [{ text: '🤖 Доработка ботов' }, { text: '⚙️ Frontend-разработка' }],
+                [{ text: '🤖 Доработка ботов' }, { text: '⚙️ Web-разработка' }],
                 [{ text: '⬅️ Назад в услуги' }]
             ],
             resize_keyboard: true

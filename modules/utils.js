@@ -4,10 +4,12 @@
  * @returns {string|null} - Ссылка или null.
  */
 function extractUrl(text) {
-    if (!text) return null;
+    // Если текста нет (прислали только файл), возвращаем null
+    if (!text || typeof text !== 'string') return null;
+    
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     const matches = text.match(urlRegex);
-    return matches ? matches[0] : null;
+    return matches ? matches[0] : null; 
 }
 
 module.exports = { extractUrl };
