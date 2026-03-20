@@ -118,5 +118,19 @@ module.exports = {
             resize_keyboard: true,
             one_time_keyboard: true
         }
-    })
+    }),
+    funnelStep1: () => {
+        return Markup.inlineKeyboard([
+            [Markup.button.callback('🎁 Получить подарок и Ключ', 'funnel_gift')]
+        ]);
+    },
+
+    // Кнопки выбора МАК-карт
+    macCards: () => Markup.inlineKeyboard([
+        [
+            Markup.button.callback('🃏 Карта 1', 'mac_1'),
+            Markup.button.callback('🃏 Карта 2', 'mac_2'),
+            Markup.button.callback('🃏 Карта 3', 'mac_3')
+        ]
+    ])
 };

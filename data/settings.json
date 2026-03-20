@@ -1,6 +1,11 @@
 {
+  "128236897": {
+    "selectedModel": "deepseek/deepseek-chat",
+    "mode": "short"
+  },
   "1893912621": {
     "selectedModel": "search:Qwen/Qwen2.5-72B-Instruct",
-    "mode": "long"
+    "mode": "long",
+    "waitingForAuthor": false
   }
 }

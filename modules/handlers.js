@@ -2,7 +2,7 @@
  * @module Handlers
  * @description Основной контроллер навигации. Обрабатывает нажатия кнопок Reply-меню и переключает экраны.
  */
-
+const { Markup } = require('telegraf');
 const storage = require("./storage");
 const config = require("./config");
 const menus = require("./menus");
@@ -30,7 +30,7 @@ module.exports = async (ctx, userSettings, userHistory) => {
       return await ctx.reply("Главное меню:", menus.main());
 
     case "❓ Справка":
-      return await ctx.reply("Я — И-Кротик. Помогаю общаться с ИИ и делюсь полезностями от Марии.");
+      return await ctx.reply("Я — И-Кротик. Воспользуйтесь навигацией по кнопкам или напишите вопрос Марии .\n\n @sherab_wangmo");
 
     // --- КАТЕГОРИИ УСЛУГ ---
     case "💎 Услуги":
@@ -40,18 +40,30 @@ module.exports = async (ctx, userSettings, userHistory) => {
       return await ctx.reply("Выберите интересующее направление:", menus.buy());
 
     case "🎓 Тренинги":
-      return await ctx.reply("Наши актуальные тренинги:", menus.trainings());
+      return await ctx.reply("Актуальные тренинги:", menus.trainings());
 
     case "💻 Разработка":
       return await ctx.reply("Услуги по разработке IT-решений:", menus.dev());
 
     // --- ЛОГИКА ВОПРОСА ---
     case "✍️ Задать вопрос":
-      settings.waitingForAuthor = true; // Ставим флаг ожидания текста
-      
+      // Снимаем флаг ожидания, если он вдруг остался от старой версии
+      settings.waitingForAuthor = false;
+      storage.save(config.SETTINGS_FILE, userSettings);
+
       return await ctx.reply(
-        "Просто напиши свой вопрос следующим сообщением! Я передам его Марии.",
-        { reply_markup: { remove_keyboard: true } } // Убираем кнопки, чтобы не мешали вводу
+        "✍️ <b>Связь с Марией</b>\n\nНажмите на кнопку ниже, чтобы перейти в личный чат и задать свой вопрос напрямую!",
+        {
+          parse_mode: 'HTML',
+          reply_markup: {
+            inline_keyboard: [
+              [
+                // Укажите здесь вашу ссылку на профиль
+                { text: '✉️ Написать Марии', url: 'https://t.me/@sherab_wangmo' }
+              ]
+            ]
+          }
+        }
       );
 
     // --- ЛОГИКА ИИ (ВЫБОР МОДЕЛИ) ---
@@ -85,9 +97,19 @@ module.exports = async (ctx, userSettings, userHistory) => {
 
     // --- ОБРАБОТКА КОНКРЕТНЫХ УСЛУГ: ТРЕНИНГИ ---
     case "✨ Личная Сказка":
-      return await ctx.reply(
-        "✨ <b>Личная Сказка</b> — это методика глубокой трансформации через метафоры. Помогает найти ответы внутри себя.\n\nЗаписаться: @sherab_wangmo", 
-        { parse_mode: 'HTML' }
+      return await ctx.reply( `✨ <b>Представьте, что у вас есть волшебный ключ...</b>\n\n` +
+        `Этот ключ открывает двери к вашим самым глубоким переживаниям. Я разработала метод, сочетающий <b>life-коучинг, сказкотерапию и метафорические карты</b>.\n\n` +
+        `Вместе мы создадим вашу личную терапевтическую сказку, которая поможет:\n` +
+        `• Преодолеть страхи\n` +
+        `• Найти внутренние ресурсы\n` +
+        `• Проработать план к успеху\n\n` +
+        `🎁 Нажмите кнопку ниже, чтобы получить мини-практику "Картография души" в подарок!`,
+         { 
+          parse_mode: 'HTML',
+          reply_markup: {
+            inline_keyboard: [[{ text: '🎁 Получить подарок', callback_data: 'funnel_gift' }]]
+          }
+        }
       );
 
     case "📈 Быстрый Коучинг":
@@ -97,28 +119,52 @@ module.exports = async (ctx, userSettings, userHistory) => {
       );
 
     // --- ОБРАБОТКА КОНКРЕТНЫХ УСЛУГ: РАЗРАБОТКА ---
-    case "🤖 Создание ботов":
+       case "🤖 Создание ботов":
       return await ctx.reply(
-        "🤖 <b>Создание ботов</b> — разработка сложных систем, интеграция ИИ и автоматизация бизнеса.\n\nОбсудить проект: @sherab_wangmo", 
-        { parse_mode: 'HTML' }
+        "<b>🤖 Создание ботов</b>\n\nРазработка сложных систем, интеграция ИИ и автоматизация бизнеса.\n\n" +
+        "<i>Срок: от 7 дней\nСтоимость: от 15 000 руб.</i>", 
+        { 
+            parse_mode: 'HTML',
+            ...Markup.inlineKeyboard([
+                [Markup.button.callback('🚀 Оставить заявку', 'order_bot')]
+            ])
+        }
       );
 
     case "⚙️ Создание лендинга":
       return await ctx.reply(
-        "⚙️ <b>Создание лендинга</b> — продающие страницы с современным дизайном и высокой конверсией.\n\nОбсудить проект: @sherab_wangmo",
-        { parse_mode: 'HTML' }
+        "⚙️ <b>Создание лендинга</b> — продающие страницы с современным дизайном и высокой конверсией.\n\n" +
+        "<i>Срок: от 14 дней\n Стоимость: от 15 000 руб.</i>",
+       { 
+            parse_mode: 'HTML',
+            ...Markup.inlineKeyboard([
+                [Markup.button.callback('🚀 Оставить заявку', 'order_lending')]
+            ])
+        }
       );
 
     case "🤖 Доработка ботов":
       return await ctx.reply(
-        "🤖 <b>Доработка ботов</b> — исправление ошибок, добавление новых функций и оптимизация вашего текущего бота.\n\nОбсудить проект: @sherab_wangmo",
-        { parse_mode: 'HTML' }
+        "🤖 <b>Доработка ботов</b> — исправление ошибок, добавление новых функций и оптимизация вашего текущего бота.\n\n" +
+        "<i>Срок: от 5 дней\nСтоимость: от 5 000 руб.</i>",
+        { 
+            parse_mode: 'HTML',
+            ...Markup.inlineKeyboard([
+                [Markup.button.callback('🚀 Оставить заявку', 'order_bot_good')]
+            ])
+        }
       );
 
     case "⚙️ Web-разработка":
       return await ctx.reply(
-        "⚙️ <b>Web-разработка</b> — создание интерфейсов, верстка, оживление макетов, backend-разработка на Node.js.\n\nОбсудить проект: @sherab_wangmo",
-        { parse_mode: 'HTML' }
+        "⚙️ <b>Web-разработка</b> — создание интерфейсов, верстка, оживление макетов, backend-разработка на Node.js.\n\n" +
+        "<i>Срок: от 7 дней\nСтоимость: от 15 000 руб.</i>",
+        { 
+            parse_mode: 'HTML',
+            ...Markup.inlineKeyboard([
+                [Markup.button.callback('🚀 Оставить заявку', 'order_web')]
+            ])
+        }
       );
 
     default:
