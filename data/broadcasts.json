@@ -8,5 +8,15 @@
       "success": 1,
       "failed": 0
     }
+  },
+  {
+    "date": "21.03.2026, 14:22:32",
+    "text": "Вот вам классный гайд",
+    "type": "document",
+    "stats": {
+      "total": 2,
+      "success": 2,
+      "failed": 0
+    }
   }
 ]

@@ -52,6 +52,14 @@ if (ctx.message.photo && userId === config.ADMIN_ID) {
         await ctx.reply(`Вот ID твоего фото:`);
         return await ctx.reply(`<code>${fileId}</code>`, { parse_mode: 'HTML' });
     }
+    // Обработчик для получения ID документов (PDF, презентаций)
+if (ctx.message && ctx.message.document && userId === config.ADMIN_ID) {
+    const docId = ctx.message.document.file_id;
+    const fileName = ctx.message.document.file_name;
+    
+    await ctx.reply(`📄 Получен ID документа: ${fileName}`);
+    return await ctx.reply(`<code>${docId}</code>`, { parse_mode: 'HTML' });
+}
 
 
     const text = ctx.message.text;
