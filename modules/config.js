@@ -23,20 +23,18 @@ module.exports = {
     DEFAULT_MODEL: 'deepseek/deepseek-chat',
     MAX_HISTORY: 10,
      MODELS: {
-        'Qwen 3.5(HF)': 'hf:Qwen/Qwen3.5-27B',
+        'Qwen 2.5 (HF)': 'hf:Qwen/Qwen2.5-72B-Instruct', 
         'GPT-os(HF)': 'hf:openai/gpt-oss-20b',
         'Llama(HF)': 'hf:meta-llama/Llama-3.1-8B-Instruct',
+        'Claude': 'anthropic/claude-3-haiku',
+         'Gemma 3 (OR)': 'google/gemma-3-27b-it:free',
+        'Mistral 7B (Free)': 'mistralai/mistral-7b-instruct:free',
         'DeepSeek (OR)': 'deepseek/deepseek-chat',
     '🌍 Поиск в Google': 'search:Qwen/Qwen2.5-72B-Instruct' // Модель Qwen будет "думать" над результатами поиск
     },
-    // Добавьте это в module.exports вашего config.js
-FUNNEL: {
-    STEP_1_TEXT: "✨ Представьте, что у вас есть волшебный ключ к вашему внутреннему миру...", // Ваш текст из описания
-    GIFT_URL: "https://t.me", // Ссылка на пост с подарком (медитацией)
-    MAC_CARDS: [
-        { id: 1, text: "Карта 1: Вы на пороге открытий. Ваше подсознание шепчет...", img: "url_to_image_1" },
-        { id: 2, text: "Карта 2: Дракон на пути — это лишь ваша тень. Пора...", img: "url_to_image_2" },
-        { id: 3, text: "Карта 3: Золотая нить ведет вас к истинному Я...", img: "url_to_image_3" }
+    ASTRO_MODELS: [
+        'deepseek/deepseek-chat',             // Основная (умная)
+        'google/gemma-3-27b-it:free',         // Резерв 1 (новая бесплатная)
+        'mistralai/mistral-7b-instruct:free'  // Резерв 2 (стабильная бесплатная)
     ]
-}
 };

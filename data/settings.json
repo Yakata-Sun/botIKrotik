@@ -4,8 +4,9 @@
     "mode": "short"
   },
   "1893912621": {
-    "selectedModel": "search:Qwen/Qwen2.5-72B-Instruct",
+    "selectedModel": "hf:Qwen/Qwen3.5-27B",
     "mode": "long",
-    "waitingForAuthor": false
+    "waitingForAuthor": false,
+    "isAstroCheck": false
   }
 }

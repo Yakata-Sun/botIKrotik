@@ -68,7 +68,7 @@ module.exports = {
     buy: () => ({
         reply_markup: {
             keyboard: [
-                [{ text: '🎓 Тренинги' }, { text: '💻 Разработка' }],
+                [{ text: '📈 Коучинг' }, { text: '💻 Разработка' }],
                 [{ text: '⬅️ Назад' }]
             ],
             resize_keyboard: true,
@@ -84,7 +84,7 @@ module.exports = {
         reply_markup: {
             keyboard: [
                 [{ text: '✨ Личная Сказка' }, { text: '📈 Быстрый Коучинг' }],
-                [{ text: '⬅️ Назад в услуги' }]
+                [{ text: '🔮 Астро-чекап' }, {text: '⬅️ Назад в услуги' }]
             ],
             resize_keyboard: true,
             persistent: true 
