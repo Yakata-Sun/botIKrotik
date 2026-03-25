@@ -19,15 +19,41 @@ module.exports = async (ctx, userSettings, userHistory) => {
   const text = ctx.message.text;
   const userId = ctx.from.id;
   const settings = userSettings[userId];
+    const isAdmin = String(userId) === String(config.ADMIN_ID);
+     let count = Object.keys(userHistory).length; // Считаем ID в базе
+
+   console.log(`Проверка админа: Ваш ID ${userId}, ID в конфиге ${config.ADMIN_ID}, Итог: ${userId === config.ADMIN_ID}`);
 
   // Если настроек нет (защита от ошибок), выходим
   if (!settings) return false;
 
+  const menuButtons = ['💎 Услуги', '🔮 Астро-чекап', '✨ Личная Сказка', '📈 Быстрый Коучинг', '⬅️ Назад'];
+if (menuButtons.includes(text)) {
+    settings.isAstroCheck = false;
+    // storage.save сделаем один раз в конце или прямо тут
+}
+
   switch (text) {
     // --- ГЛАВНАЯ НАВИГАЦИЯ ---
+     // --- НАЗАД ---
     case "⬅️ Назад":
     case "Главное меню":
-      return await ctx.reply("Главное меню:", menus.main());
+    // Сбрасываем всё!
+    settings.waitingForBroadcastPhoto = false;
+    settings.waitingForBroadcastText = false;
+    settings.waitingForConfirm = false;
+    storage.save(config.SETTINGS_FILE, userSettings);
+      return await ctx.reply("Возвращаемся:", menus.main(isAdmin, count));
+
+case "❌ Отмена":
+    if (userId !== config.ADMIN_ID) return false;
+    // Сбрасываем флаги рассылки
+    settings.waitingForBroadcastPhoto = false;
+    settings.waitingForBroadcastText = false;
+    settings.waitingForConfirm = false;
+    storage.save(config.SETTINGS_FILE, userSettings);
+    
+    return await ctx.reply("Рассылка отменена.", menus.adminPanel(count));
 
     case "❓ Справка":
       return await ctx.reply("Я — И-Кротик. Воспользуйтесь навигацией по кнопкам или напишите вопрос Марии .\n\n @sherab_wangmo");
@@ -35,11 +61,10 @@ module.exports = async (ctx, userSettings, userHistory) => {
     // --- КАТЕГОРИИ УСЛУГ ---
     case "💎 Услуги":
     case "⬅️ Назад в услуги":
-            console.log('Нажата кнопка услуг. Объект menus существует:', !!menus);
       return await ctx.reply("Выберите интересующее направление:", menus.buy());
 
     case "📈 Коучинг":
-      return await ctx.reply("Актуальные тренинги:", menus.trainings());
+      return await ctx.reply("Актуальные тренинги и чекапы:", menus.trainings());
 
     case "💻 Разработка":
       return await ctx.reply("Услуги по разработке IT-решений:", menus.dev());
@@ -64,38 +89,65 @@ module.exports = async (ctx, userSettings, userHistory) => {
           }
         }
       );
+ case "⚙️ Админ-панель":
+  case "⬅️ Назад в админку":
+        if (userId !== config.ADMIN_ID) return false;
+        return await ctx.reply("Возвращаемся в панель управления:", menus.adminPanel(count));
 
-    // --- ЛОГИКА ИИ (ВЫБОР МОДЕЛИ) ---
-    case "🤖 Спросить ИИ":
+    case "📢 Рассылка":
+    case (text.startsWith("📢 Рассылка")  ? text : null):  // Чтобы кнопка с цифрой тоже срабатывала
+        if (userId !== config.ADMIN_ID) return false;
+         settings.waitingForBroadcastPhoto = true; 
+    storage.save(config.SETTINGS_FILE, userSettings);
+        return await ctx.reply(
+            "📝 <b>Режим рассылки активирован</b>\n\n" +
+        "Пришлите то, что хотите отправить пользователям:\n" +
+        "• Просто текст\n" +
+        "• Фото с описанием\n" +
+        "• Файл/Документ\n\n" +
+        "<i>Бот автоматически предложит подтвердить отправку.</i>",
+            { parse_mode: 'HTML', ...menus.confirmBroadcast() } // Или ваша логика вызова /broadcast
+        );
+   // --- настройка ИИ (ТОЛЬКО ДЛЯ АДМИНА) ---
+    case "🤖 Настройки ИИ":
+       if (!isAdmin) return false;
     case "🤖 Сменить модель":
-      return await ctx.reply("Выберите текстовую модель нейросети:", menus.ai());
+      return await ctx.reply("Настройка личного поиска и моделей:", menus.chatAI(settings));
 
-    // --- ПЕРЕКЛЮЧЕНИЕ РЕЖИМОВ (С ГАЛОЧКАМИ) ---
     case "⚡️ Быстро (Кратко)":
     case "✅ ⚡️ Быстро":
+      if (!isAdmin) return false;
       settings.mode = "short";
       storage.save(config.SETTINGS_FILE, userSettings);
-      return await ctx.reply("🚀 Режим: Краткие ответы. Экономлю ваше время!", menus.chatAI(settings));
+      return await ctx.reply("🚀 Режим поиска: Кратко.", menus.chatAI(settings));
 
     case "📚 Подробно (Детально)":
     case "✅ 📚 Подробно":
+      if (!isAdmin) return false;
       settings.mode = "long";
       storage.save(config.SETTINGS_FILE, userSettings);
-      return await ctx.reply("📖 Режим: Детальные ответы. Пишу развернуто и глубоко.", menus.chatAI(settings));
-   // --- ОЧИСТКА КОНТЕКСТА ---
+      return await ctx.reply("📖 Режим поиска: Подробно.", menus.chatAI(settings));
+
     case "🧹 Очистить контекст":
-      // Обнуляем массив истории для этого пользователя
+      if (!isAdmin) return false;
       userHistory[userId] = []; 
-      // Сохраняем изменения в файл через модуль storage
       storage.save(config.HISTORY_FILE, userHistory);
-      
-      return await ctx.reply(
-        "🧹 Контекст очищен! ИИ больше не помнит нашу предыдущую переписку.", 
-        menus.chatAI(settings)
-      );
+      return await ctx.reply("🧹 Контекст очищен!", menus.chatAI(settings));
+
+      case "🌍 Поиск: ВКЛ":
+case "🌍 Поиск: ВЫКЛ":
+    if (userId !== config.ADMIN_ID) return false;
+    // Инвертируем значение: если было true, станет false и наоборот
+    settings.useSearch = !settings.useSearch;
+    storage.save(config.SETTINGS_FILE, userSettings);
+    
+    const status = settings.useSearch ? "активирован" : "отключен";
+    return await ctx.reply(`🌐 Режим поиска в Google ${status}`, menus.chatAI(settings));
 
     // --- ОБРАБОТКА КОНКРЕТНЫХ УСЛУГ: ТРЕНИНГИ ---
     case "✨ Личная Сказка":
+            settings.isAstroCheck = false;
+      storage.save(config.SETTINGS_FILE, userSettings);
       return await ctx.reply( `✨ <b>Представьте, что у вас есть Карта...</b>\n\n` +
         `Эта карта точно показывает вам как прийти к своей мечте...\n\n` + 
         `Я разработала метод, сочетающий <b>life-коучинг, сказкотерапию и метафорические карты</b>.\n\n` +
@@ -114,6 +166,8 @@ module.exports = async (ctx, userSettings, userHistory) => {
       );
 
        case "📈 Быстрый Коучинг":
+              settings.isAstroCheck = false;
+      storage.save(config.SETTINGS_FILE, userSettings);
       return await ctx.reply(
         `📈 <b>Быстрый Коучинг</b> — это фокус-сессия для решения конкретного запроса здесь и сейчас.\n\n` +
         `Всего за 60 минут мы:\n` +
@@ -138,12 +192,15 @@ module.exports = async (ctx, userSettings, userHistory) => {
     return await ctx.reply(
         "✨ <b>Хотите понять что про вас написано в звездах?</b>\n\n" +
         "Напишите вашу дату, точное время и место рождения. \n\n" +
+        "Используйте формат дд.мм.гггг чч:мм \n\n" +
         "<i>Я рассчитаю ваш элемент личности и подскажу, на что опереться именно сейчас, чтобы прийти к гармонии..</i>. \n\n",
         { parse_mode: 'HTML' }
     );
 
     // --- ОБРАБОТКА КОНКРЕТНЫХ УСЛУГ: РАЗРАБОТКА ---
        case "🤖 Создание ботов":
+              settings.isAstroCheck = false;
+      storage.save(config.SETTINGS_FILE, userSettings);
       return await ctx.reply(
         "<b>🤖 Создание ботов</b>\n\nРазработка сложных систем, интеграция ИИ и автоматизация бизнеса.\n\n" +
         "<b>В виде примера вы можете оценить этот бот.\n\n" +
@@ -157,6 +214,8 @@ module.exports = async (ctx, userSettings, userHistory) => {
       );
 
     case "⚙️ Создание лендинга":
+            settings.isAstroCheck = false;
+      storage.save(config.SETTINGS_FILE, userSettings);
       return await ctx.reply(
         "⚙️ <b>Создание лендинга</b> — продающие страницы с современным дизайном и высокой конверсией.\n\n" +
         "<i>Срок: от 14 дней\n Стоимость: от 15 000 руб.</i>",
@@ -169,6 +228,8 @@ module.exports = async (ctx, userSettings, userHistory) => {
       );
 
     case "🤖 Доработка ботов":
+            settings.isAstroCheck = false;
+      storage.save(config.SETTINGS_FILE, userSettings);
       return await ctx.reply(
         "🤖 <b>Доработка ботов</b> — исправление ошибок, добавление новых функций и оптимизация вашего текущего бота.\n\n" +
         "<i>Срок: от 5 дней\nСтоимость: от 5 000 руб.</i>",
@@ -181,6 +242,8 @@ module.exports = async (ctx, userSettings, userHistory) => {
       );
 
     case "⚙️ Web-разработка":
+            settings.isAstroCheck = false;
+      storage.save(config.SETTINGS_FILE, userSettings);
       return await ctx.reply(
         "⚙️ <b>Web-разработка</b> — создание интерфейсов, верстка, оживление макетов, backend-разработка на Node.js.\n\n" +
         "<i>Срок: от 7 дней\nСтоимость: от 15 000 руб.</i>",

@@ -10,10 +10,8 @@ const ai = {
      * ГЛАВНЫЙ ДИСПЕТЧЕР
      */
     async getAIResponse(messages, modelId, isShortMode) {
-        // 1. ЛОГИКА ПОИСКА (с использованием Hugging Face)
         if (modelId.startsWith('search:')) {
-            const realModel = modelId.replace('search:', '');
-            return await this.callSearchWithHF(messages, realModel, isShortMode);
+            return await this.callSearchWithOpenRouter(messages, modelId, isShortMode);
         }
 
         // 2. ОБЫЧНЫЙ HUGGING FACE
@@ -26,29 +24,40 @@ const ai = {
         return await this.callOpenRouter(messages, modelId, isShortMode);
     },
 
-    /**
-     * МЕТОД ПОИСКА: serper Hugging Face
+ /**
+     * МЕТОД ПОИСКА через OpenRouter
      */
-    async callSearchWithHF(messages, model, isShortMode) {
+    async callSearchWithOpenRouter(messages, modelId, isShortMode) {
         try {
+            // Извлекаем чистую модель (без префикса search:)
+            const realModel = modelId.replace('search:', '');
+            // Берем последний вопрос пользователя
             const userQuery = messages[messages.length - 1].content;
-            console.log(`🔎 Выполняю поиск: ${userQuery}`);
- const webContext = await searchProvider.getContext(userQuery);
 
-    const enrichedPrompt = [{
-        role: 'user',
-        content: `Используй данные для ответа: ${webContext}\n\nВопрос: ${userQuery}`
-    }];
+            console.log(`🔍 [OR Search] Ищу в Google: ${userQuery}`);
+            
+            // 1. Получаем контекст из Google через ваш модуль search.js (Serper)
+            const webContext = await searchProvider.getContext(userQuery);
 
-            // Вызываем уже готовый метод callHuggingFace
-            // Передаем новый промпт вместо старой истории
-            return await this.callHuggingFace(enrichedPrompt, model, isShortMode);
+            // 2. Формируем обогащенный промпт для OpenRouter
+            const enrichedMessages = [
+                {
+                    role: 'system',
+                    content: `Ты — ассистент с доступом в интернет. Используй предоставленные данные из Google для ответа. 
+                    Если в данных нет ответа, скажи об этом. Данные: ${webContext}`
+                },
+                { role: 'user', content: userQuery }
+            ];
+
+            // 3. Вызываем стандартный метод OpenRouter
+            return await this.callOpenRouter(enrichedMessages, realModel, isShortMode);
 
         } catch (e) {
-            console.error('Ошибка поиска через HF:', e.message);
+            console.error('❌ Ошибка поиска через OpenRouter:', e.message);
             throw e;
         }
     },
+
 
     /**
      * ВЫЗОВ HUGGING FACE

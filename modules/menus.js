@@ -1,53 +1,80 @@
 const config = require('./config');
+const { Markup } = require('telegraf'); // Добавь импорт Markup, если используешь inline-кнопки
 
 /**
  * @module Menus
- * @description Генератор экранных клавиатур (Reply Keyboards) для интерфейса бота.
+ * @description Обновленное меню: ИИ скрыт в воронку Астро-чекапа.
  */
 
 module.exports = {
-    /**
-     * Главное меню (корневой уровень).
-     * @returns {Object} Объект с reply_markup для Telegraf.
+     /**
+     * @param {boolean} isAdmin - Флаг администратора
+     * @param {number} userCount - Количество людей в базе (для кнопки админа)
      */
-    main: () => ({
-        reply_markup: {
-            keyboard: [
-                [{ text: '💎 Услуги' }, { text: '✍️ Задать вопрос'}],
-                [{ text: '❓ Справка'}, { text: '🤖 Спросить ИИ' }]
-            ],
-            resize_keyboard: true,
-            is_persistent: true
-        }
-    }),
+    main: (isAdmin = false) => {
+        let keyboard = [
+            [{ text: '💎 Услуги' }, { text: '✍️ Задать вопрос' }],
+            [{ text: '❓ Справка' }]
+        ];
 
-    /**
-     * Меню режима чата с ИИ. Отображает переключатели краткости ответов.
-     * @param {Object} settings - Объект настроек текущего пользователя.
-     * @returns {Object} Объект с кнопками выбора режима и смены модели.
-     */
-    chatAI: (settings = {}) => {
-        const isShort = settings.mode === 'short'; 
+        // Только админу (тебе) показываем кнопку прямого входа в ИИ-чат/Поиск
+        if (isAdmin) {
+            keyboard[1].push({ text: '⚙️ Админ-панель' });
+        }
+
         return {
             reply_markup: {
-                keyboard: [
-                    [
-                        { text: isShort ? '✅ ⚡️ Быстро' : '⚡️ Быстро (Кратко)' },
-                        { text: !isShort ? '✅ 📚 Подробно' : '📚 Подробно (Детально)' }
-                    ],
-                     [{ text: '🤖 Сменить модель' }, { text: '🧹 Очистить контекст' }], 
-                [{ text: '⬅️ Назад' }]
-                ],
+                keyboard: keyboard,
                 resize_keyboard: true,
-                persistent: true
+                is_persistent: true
             }
         };
     },
-
-    /**
-     * Список доступных моделей нейросетей, формируемый динамически из конфига.
-     * @returns {Object} Клавиатура со списком всех подключенных AI-моделей.
+     /**
+     * Внутреннее меню Админ-панели
      */
+    adminPanel: (userCount = 0) => ({
+        reply_markup: {
+            keyboard: [
+                [{ text: `📢 Рассылка (${userCount} чел.)` }],
+                [{ text: '🤖 Настройки ИИ' }],
+                [{ text: '⬅️ Назад' }]
+            ],
+            resize_keyboard: true
+        }
+    }),
+    //Меню настройки личного ИИ
+    chatAI: (settings = {}) => {
+    const isShort = settings.mode === 'short';
+    const isSearch = settings.useSearch === true; // Новый флаг в настройках
+
+    return {
+        reply_markup: {
+            keyboard: [
+                [
+                    { text: isSearch ? '✅ 🌍 Поиск: ВКЛ' : '🌍 Поиск: ВЫКЛ' },
+                    { text: isShort ? '✅ ⚡️ Кратко' : '⚡️ Кратко' }
+                ],
+                [{ text: '🤖 Сменить модель' }, { text: '🧹 Очистить контекст' }],
+                [{ text: '⬅️ Назад в админку' }]
+            ],
+            resize_keyboard: true
+        }
+    };
+},
+ /**
+     * Кнопки подтверждения перед запуском рассылки.
+     * @returns {Object} Reply Keyboard.
+     */
+    confirmBroadcast: () => ({
+        reply_markup: {
+            keyboard: [
+                [{ text: '✅ Отправить всем' }, { text: '❌ Отмена' }]
+            ],
+            resize_keyboard: true,
+            one_time_keyboard: true
+        }
+    }),
     ai: () => {
         const modelButtons = Object.keys(config.MODELS).map(name => [{ text: name }]);
         return {
@@ -62,75 +89,37 @@ module.exports = {
     },
 
     /**
-     * Выбор категории услуг (Уровень 1).
-     * @returns {Object} Клавиатура с разделами "Тренинги" и "Разработка".
+     * Список тренингов и воронки.
+     * Астро-чекап теперь — главная точка входа в ИИ для клиентов.
      */
+    trainings: () => ({
+        reply_markup: {
+            keyboard: [
+                [{ text: '✨ Личная Сказка' }, { text: '📈 Быстрый Коучинг' }],
+                [{ text: '🔮 Астро-чекап' }, { text: '⬅️ Назад в услуги' }]
+            ],
+            resize_keyboard: true,
+            persistent: true 
+        }
+    }),
+
     buy: () => ({
         reply_markup: {
             keyboard: [
                 [{ text: '📈 Коучинг' }, { text: '💻 Разработка' }],
                 [{ text: '⬅️ Назад' }]
             ],
-            resize_keyboard: true,
-            persistent: true 
-        }
-    }),
-
-    /**
-     * Список тренингов (Уровень 2).
-     * @returns {Object} Клавиатура с конкретными продуктами Марии.
-     */
-    trainings: () => ({
-        reply_markup: {
-            keyboard: [
-                [{ text: '✨ Личная Сказка' }, { text: '📈 Быстрый Коучинг' }],
-                [{ text: '🔮 Астро-чекап' }, {text: '⬅️ Назад в услуги' }]
-            ],
-            resize_keyboard: true,
-            persistent: true 
-        }
-    }),
-
-    /**
-     * Услуги по разработке (Уровень 2).
-     * @returns {Object} Клавиатура с IT-услугами.
-     */
-    dev: () => ({
-        reply_markup: {
-            keyboard: [
-                [{ text: '🤖 Создание ботов' }, { text: '⚙️ Создание лендинга' }],
-                [{ text: '🤖 Доработка ботов' }, { text: '⚙️ Web-разработка' }],
-                [{ text: '⬅️ Назад в услуги' }]
-            ],
             resize_keyboard: true
         }
     }),
 
-    /**
-     * Кнопки подтверждения для администратора перед запуском массовой рассылки.
-     * @returns {Object} Клавиатура "Отправить всем / Отмена".
-     */
-    confirmBroadcast: () => ({
+    dev: () => ({
         reply_markup: {
             keyboard: [
-                [{ text: '✅ Отправить всем' }, { text: '❌ Отмена' }]
+                [{ text: '🤖 Создание ботов' }, { text: '⚙️ Создание лендинга' }],
+                [{ text: '⬅️ Назад в услуги' }]
             ],
-            resize_keyboard: true,
-            one_time_keyboard: true
+            resize_keyboard: true
         }
-    }),
-    funnelStep1: () => {
-        return Markup.inlineKeyboard([
-            [Markup.button.callback('🎁 Получить подарок и Ключ', 'funnel_gift')]
-        ]);
-    },
-
-    // Кнопки выбора МАК-карт
-    macCards: () => Markup.inlineKeyboard([
-        [
-            Markup.button.callback('🃏 Карта 1', 'mac_1'),
-            Markup.button.callback('🃏 Карта 2', 'mac_2'),
-            Markup.button.callback('🃏 Карта 3', 'mac_3')
-        ]
-    ])
+    })
 };

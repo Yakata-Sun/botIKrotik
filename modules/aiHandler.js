@@ -1,74 +1,72 @@
 const storage = require('./storage');
 const config = require('./config');
 const ai = require('./ai');
+const menus = require('./menus')
 
 /**
  * @module AIHandler
- * @description Контроллер для стандартных диалогов с ИИ (чат-режим).
+ * @description Теперь работает ТОЛЬКО как админ-поиск в сети.
  */
 
 /**
- * Обработчик запросов к ИИ с контролем контекста и сохранением истории.
+ * Обработчик поисковых запросов в сети (только для Админа).
  * 
  * @async
  * @param {Object} ctx - Контекст Telegraf.
- * @param {Object} userSettings - Настройки пользователей.
- * @param {Object} userHistory - История диалогов.
- * @param {Object} menus - Модуль меню.
+ * @param {Object} userSettings - Настройки пользователей (не используются, так как режим один).
+ * @param {Object} userHistory - История диалогов (для поиска не храним).
  */
-async function handleAIRequest(ctx, userSettings, userHistory, menus) {
+async function handleAIRequest(ctx, userSettings, userHistory) {
     const userId = ctx.from.id;
     const text = ctx.message.text;
-    const settings = userSettings[userId];
-    const limit = config.MAX_HISTORY || 10;
+     const settings = userSettings[userId];
 
-    // 1. ОПРЕДЕЛЕНИЕ ПАРАМЕТРОВ МОДЕЛИ
-    let model = settings.selectedModel || config.DEFAULT_MODEL;
-    let isShortMode = settings.mode === 'short';
+
+    // 1. ПРОВЕРКА НА АДМИНА
+    if (userId !== config.ADMIN_ID) {
+        return await ctx.reply("✨ Я общаюсь только в рамках <b>Астро-чекапа</b>.\nИспользуйте меню услуг ниже 👇", { parse_mode: 'HTML' });
+    }
+
+    // 2. ИЗВЛЕЧЕНИЕ ЗАПРОСА (если это команда /search)
+    const query = text.startsWith('/search') ? text.replace('/search', '').trim() : text;
+
+    if (!query) {
+        return await ctx.reply("🔎 Напишите запрос, например: <code>/search главные тренды Ба-Цзы в 2026 году</code>", { parse_mode: 'HTML' });
+    }
 
     try {
-        // Визуальная индикация «печатает...»
         await ctx.sendChatAction('typing');
 
-        // 2. ПОДГОТОВКА КОНТЕКСТА
-        // Собираем историю и добавляем текущее сообщение пользователя
-        let messages = [...(userHistory[userId] || [])];
-        messages.push({ role: 'user', content: text, timestamp: Date.now() });
-
-        // Обрезаем историю до лимита, чтобы не перегружать токены
-        if (messages.length > limit) {
-            messages = messages.slice(-limit);
+        // 1. ОПРЕДЕЛЯЕМ МОДЕЛЬ
+        // Если поиск включен, добавляем префикс search: к ВЫБРАННОЙ тобой модели
+        let model = settings.selectedModel || config.DEFAULT_MODEL;
+        if (settings.useSearch) {
+            model = `search:${model}`;
         }
 
-        // 3. ЗАПРОС К API
-        const response = await ai.getAIResponse(messages, model, isShortMode);
-        
-        const choice = response.data.choices?.[0];
-        const answer = (choice?.message?.content || "").trim();
+        // 2. КОНТЕКСТ
+        // Для поиска лучше не слать длинную историю, для чата — шлем
+        let messages = settings.useSearch 
+            ? [{ role: 'user', content: text }]
+            : [...(userHistory[userId] || []), { role: 'user', content: text }];
+
+        // 3. ЗАПРОС
+        const response = await ai.getAIResponse(messages, model, settings.mode === 'short');
+        const answer = (response.data.choices?.[0]?.message?.content || "").trim();
 
         if (answer) {
-            // 4. СОХРАНЕНИЕ В ИСТОРИЮ
-            userHistory[userId].push({ role: 'assistant', content: answer, timestamp: Date.now() });
-            
-            // Финальная обрезка истории перед записью в файл
-            if (userHistory[userId].length > limit) {
-                userHistory[userId] = userHistory[userId].slice(-limit);
+            if (!settings.useSearch) {
+                userHistory[userId].push({ role: 'user', content: text });
+                userHistory[userId].push({ role: 'assistant', content: answer });
+                storage.save(config.HISTORY_FILE, userHistory);
             }
-
-            storage.save(config.HISTORY_FILE, userHistory);
             
-            // 5. ОТВЕТ ПОЛЬЗОВАТЕЛЮ С МЕНЮ ЧАТА
-            await ctx.reply(answer, menus.chatAI(settings));
-        } else {
-            // Откат истории при пустом ответе
-            if (userHistory[userId].length > 0) userHistory[userId].pop(); 
-            await ctx.reply("🤖 ИИ прислал пустой ответ. Попробуйте еще раз или смените модель.");
+            const prefix = settings.useSearch ? "🌐 <b>Найденный ответ:</b>\n\n" : "";
+            await ctx.reply(prefix + answer, { parse_mode: 'HTML', ...menus.chatAI(settings) });
         }
     } catch (e) {
-        // Защита от ошибок связи
-        if (userHistory[userId] && userHistory[userId].length > 0) userHistory[userId].pop();
-        console.error('❌ Ошибка в handleAIRequest:', e.message);
-        await ctx.reply("⚠️ Ошибка связи с ИИ. Попробуйте другую модель в настройках.");
+        console.error('Ошибка в Админ-ИИ:', e.message);
+        await ctx.reply("⚠️ Ошибка. Попробуйте сменить модель.");
     }
 }
 

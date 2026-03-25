@@ -8,6 +8,7 @@
 const config = require('./config');
 const { extractUrl } = require('./utils');
 const { Markup } = require('telegraf');
+const storage = require('./storage');
 
 /**
  * Основной обработчик логики рассылки.
@@ -18,27 +19,31 @@ const { Markup } = require('telegraf');
  * @param {Function} startBroadcast - Функция запуска фактической рассылки.
  * @returns {Promise<boolean>} - true, если сообщение перехвачено рассылкой; false, если идти дальше (в ИИ).
  */
-async function handleBroadcast(ctx, userSettings, menus, startBroadcast) {
+async function handleBroadcast(ctx, userSettings, menus, startBroadcast, userHistory) { 
     const userId = ctx.from.id;
     const admin = userSettings[userId];
     
     // Безопасное получение данных из сообщения
     const { text, photo, document } = ctx.message || {};
 
-    // 1. ПРОВЕРКА ПРАВ: Если пишет не админ, игнорируем модуль полностью
-    if (userId !== Number(config.ADMIN_ID)) return false;
+    // ПРОВЕРКА ПРАВ: Сравниваем просто как числа или строки
+    if (String(userId) !== String(config.ADMIN_ID)) return false;
 
     /**
      * Вспомогательная функция для полной очистки временных данных админа.
      * Вызывается при отмене или успешном завершении рассылки.
      */
-    const resetAdminState = () => {
+    const resetAdminState = async (msg) => {
         admin.waitingForBroadcastPhoto = false;
         admin.waitingForBroadcastText = false;
         admin.waitingForConfirm = false;
         admin.broadcastPhotoId = null;
         admin.broadcastFileId = null;
         admin.broadcastDraftText = null;
+        storage.save(config.SETTINGS_FILE, userSettings);
+        
+        const count = Object.keys(userHistory).length;
+        await ctx.reply(msg, menus.adminPanel(count));
     };
 
     // --- ШАГ 1: ПРИЕМ МЕДИА-КОНТЕНТА (Фото, PDF или просто текст) ---
@@ -134,10 +139,10 @@ async function handleBroadcast(ctx, userSettings, menus, startBroadcast) {
             };
 
             // Очищаем стейт ПЕРЕД запуском, чтобы не зациклить админа при ошибках
-            resetAdminState();
+            resetAdminState("🚀 Рассылка запущена!"); // Очищаем стейт
             
             // Передаем управление в основной модуль рассылки (цикл по всем юзерам)
-            await startBroadcast(ctx, userSettings, menus, content);
+            await startBroadcast(ctx, userHistory, menus, content);
             return true;
         }
 

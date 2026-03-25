@@ -1,36 +1,62 @@
 /**
  * @module Commands
- * @description Регистрация команд бота (/start, /broadcast, /logs).
+ * @description Регистрация команд бота (/start, /broadcast, /search, /logs).
  */
 
 const config = require('./config');
 const menus = require('./menus');
 const storage = require('./storage');
+const ai = require('./ai'); // Добавили импорт для работы /search
 
-module.exports = (bot, userSettings) => {
+module.exports = (bot, userSettings, userHistory) => {
     
     /**
      * Команда /start - Приветствие и инициализация меню
      */
-    bot.start((ctx) => {
-        const welcomeText = 'Доброго времени! Я умный помощник И-Кротик. Здесь Мария проводит интересные тренинги, делится инсайтами, и здесь вы можете пользоваться нейросетями даром.';
-        return ctx.reply(welcomeText, menus.main());
+    bot.command("start", async (ctx) => {
+        const userId = ctx.from.id;
+        const isAdmin = String(userId) === String(config.ADMIN_ID);
+
+        // 1. Инициализация настроек
+        if (!userSettings[userId]) {
+            userSettings[userId] = { 
+                selectedModel: config.DEFAULT_MODEL, 
+                mode: 'short',
+                isAstroCheck: false 
+            };
+        }
+
+        // 2. Принудительный сброс всех флагов
+        const settings = userSettings[userId];
+        settings.waitingForBroadcastPhoto = false;
+        settings.waitingForBroadcastText = false;
+        settings.waitingForConfirm = false;
+        settings.isAstroCheck = false;
+        
+        storage.save(config.SETTINGS_FILE, userSettings);
+
+        // 3. Подсчет пользователей (из переданного userHistory)
+        const count = Object.keys(userHistory || {}).length;
+
+        const welcomeText = 'Доброго времени! Я умный помощник И-Кротик. ✨\n\n' +
+            'Здесь Мария проводит интересные тренинги, делится инсайтами, ' +
+            'и здесь вы можете пользоваться нейросетями даром.';
+
+        // Передаем isAdmin и count в меню
+        return await ctx.reply(welcomeText, menus.main(isAdmin, count));
     });
 
     /**
-     * Команда /broadcast - Запуск пошагового конструктора рассылки
+     * Команда /broadcast - Запуск конструктора рассылки
      */
     bot.command('broadcast', async (ctx) => {
-        // Проверка прав администратора
-        if (ctx.from.id !== Number(config.ADMIN_ID)) return;
+        if (String(ctx.from.id) !== String(config.ADMIN_ID)) return;
         
         const userId = ctx.from.id;
-
-        // Инициализируем настройки, если их нет
         if (!userSettings[userId]) userSettings[userId] = {};
 
-        // Включаем первый шаг стейт-машины в broadcastHandler.js
         userSettings[userId].waitingForBroadcastPhoto = true;
+        storage.save(config.SETTINGS_FILE, userSettings);
         
         await ctx.reply('📢 Режим создания рассылки активирован.\n\nПришлите ФОТО, PDF-ФАЙЛ или просто ТЕКСТ сообщения:', {
             reply_markup: { 
@@ -41,42 +67,57 @@ module.exports = (bot, userSettings) => {
     });
 
     /**
-     * Команда /logs - Просмотр истории рассылок
+     * Команда /search - Личный поиск Админа
+     */
+    bot.command('search', async (ctx) => {
+        const userId = ctx.from.id;
+        if (String(userId) !== String(config.ADMIN_ID)) return;
+
+        const query = ctx.message.text.replace('/search', '').trim();
+        
+        if (!query) {
+            return await ctx.reply("🔎 Напишите запрос, например: <code>/search тренды 2026</code>", { parse_mode: 'HTML' });
+        }
+
+        await ctx.sendChatAction('typing');
+        try {
+            const searchModel = "search:" + config.DEFAULT_MODEL; 
+            const response = await ai.getAIResponse([{ role: 'user', content: query }], searchModel, false);
+            
+            // Исправлено обращение к результату
+            const answer = response.data.choices[0].message.content;
+            await ctx.reply(`<b>Результат поиска:</b>\n\n${answer}`, { parse_mode: 'HTML' });
+        } catch (e) {
+            console.error('Ошибка /search:', e.message);
+            await ctx.reply("❌ Ошибка поиска.");
+        }
+    });
+
+    /**
+     * Команда /logs - История рассылок
      */
     bot.command('logs', async (ctx) => {
+        if (String(ctx.from.id) !== String(config.ADMIN_ID)) return;
+        
         try {
-            // Проверка прав (приводим к числу для надежности)
-            if (ctx.from.id !== Number(config.ADMIN_ID)) return;
-
             const logs = storage.load(config.BROADCAST_LOG);
-            
-            // Проверка: если логов нет или это не массив
             if (!Array.isArray(logs) || logs.length === 0) {
                 return await ctx.reply('История рассылок пуста.');
             }
 
-            // Формируем отчет по последним 5 записям
             const lastLogs = logs.slice(-5).map(l => {
-                // Безопасное получение данных (защита от старых или битых записей)
                 const date = l.date || 'Нет даты';
-                const preview = l.text ? l.text.substring(0, 30) : (l.type === 'photo' ? 'Фото-рассылка' : 'Файл/Документ');
-                
-                // Проверяем наличие объекта stats, чтобы не упасть на l.stats.success
+                const preview = l.text ? l.text.substring(0, 30) : 'Медиа-рассылка';
                 const delivered = l.stats?.success ?? 0;
                 const total = l.stats?.total ?? 0;
-
                 return `📅 ${date}\n📝 "${preview}..." \n📊 Успешно: ${delivered}/${total}`;
             }).join('\n\n');
 
             await ctx.reply(`📜 Последние рассылки:\n\n${lastLogs}`);
         } catch (e) {
-            console.error('Ошибка в команде /logs:', e.message);
-            await ctx.reply('⚠️ Произошла ошибка при чтении логов. Возможно, файл поврежден.');
+            await ctx.reply('⚠️ Ошибка при чтении логов.');
         }
     });
 
-    /**
-     * Команда /help - Справочная информация
-     */
-    bot.help((ctx) => ctx.reply('Используйте кнопки меню для навигации или просто пишите вопросы для ИИ.'));
+    bot.help((ctx) => ctx.reply('Используйте кнопки меню для навигации. ✨'));
 };

@@ -37,22 +37,29 @@ let userSettings = storage.load(config.SETTINGS_FILE);
 let userHistory = storage.load(config.HISTORY_FILE);
 
 // Регистрация глобальных команд (/start, /help и др.)
-registerCommands(bot, userSettings);
+registerCommands(bot, userSettings, userHistory);
 
 /**
  * Основной слушатель всех входящих сообщений
  */
 bot.on('message', async (ctx) => {
-    // 1. СРАЗУ ИГНОРИРУЕМ ТЕХНИЧЕСКИЕ ОБНОВЛЕНИЯ (чтобы код ниже не упал)
     if (!ctx.message) return;
+        const userId = ctx.from.id;
+    const text = ctx.message.text;
 
-    // 2. ОТСЛЕЖИВАНИЕ ID ФАЙЛОВ ДЛЯ АДМИНА
-    // Вынесено в начало, так как файлы (фото/док) не имеют поля .text
+            // 1. Если пользователя нет в истории - ДОБАВЛЯЕМ И СОХРАНЯЕМ СРАЗУ
+    if (!userHistory[userId]) {
+        userHistory[userId] = []; // Создаем пустую ячейку
+        // ВЫЗЫВАЕМ STORAGE.SAVE
+        storage.save(config.HISTORY_FILE, userHistory); 
+        console.log(`✅ ID ${userId} зафиксирован в базе истории.`);
+    }
+
+    // 1. ОТСЛЕЖИВАНИЕ ID ФАЙЛОВ ДЛЯ АДМИНА
     const isFileProcessed = await utils.trackFileIds(ctx);
     if (isFileProcessed) return; 
 
-    const userId = ctx.from.id;
-    const text = ctx.message.text;
+
 
     // --- 1. ИНИЦИАЛИЗАЦИЯ ДАННЫХ ---
     if (!userSettings[userId]) {
@@ -64,47 +71,43 @@ bot.on('message', async (ctx) => {
         storage.save(config.SETTINGS_FILE, userSettings);
     }
     
-    if (!userHistory[userId]) {
-        userHistory[userId] = [];
-    }
+   
  
     // --- 2. ЛОГИКА АДМИН-РАССЫЛКИ ---
-    const isBroadcastActive = await handleBroadcast(ctx, userSettings, menus, startBroadcast);
+    const isBroadcastActive = await handleBroadcast(ctx, userSettings, menus, startBroadcast, userHistory);
     if (isBroadcastActive) return;
 
     // --- 3. ФИЛЬТРАЦИЯ ТЕКСТА ---
-    // Если текста нет (и это не был файл админа выше), то дальше делать нечего
     if (!text) return;
 
-       //--4. Астро-чекап
-if (userSettings[userId].isAstroCheck && text) {
-    const astroResult = await astro.handle(ctx, userSettings, userHistory, menus);
-    
-    // Если astro.handle вернул false — значит, нажата кнопка меню, 
-    // и нам нужно продолжить выполнение кода ниже (к хендлерам меню)
-    if (astroResult === false) {
-        // Ничего не делаем, идем дальше к handleMenu
-    } else {
-        return; // Если расчет прошел или выдана ошибка даты — прерываемся
+    // --- 4. АСТРО-ЧЕКАП (Геймификация для всех) ---
+    if (userSettings[userId].isAstroCheck) {
+        const astroResult = await astro.handle(ctx, userSettings, userHistory, menus);
+        // Если вернул false — значит нажата кнопка меню, идем дальше. Иначе — прерываемся.
+        if (astroResult !== false) return; 
     }
-}
+
     // --- 5. ОБРАБОТКА МЕНЮ (Услуги, Тренинги и т.д.) ---
     const menuHandled = await handleMenu(ctx, userSettings, userHistory);
     if (menuHandled) return;
 
-    // --- 6. БЫСТРАЯ СМЕНА МОДЕЛИ ---
+    // --- 6. БЫСТРАЯ СМЕНА МОДЕЛИ (Только для Админа) ---
     const selectedModelPath = config.MODELS[text]; 
-    if (selectedModelPath) {
+    if (selectedModelPath && userId === config.ADMIN_ID) {
         userSettings[userId].selectedModel = selectedModelPath;
         storage.save(config.SETTINGS_FILE, userSettings);
         return await ctx.reply(`✅ Модель установлена`, menus.chatAI(userSettings[userId])); 
     }
 
-
-    // --- 7. ЗАПРОС К ИСКУССТВЕННОМУ ИНТЕЛЛЕКТУ ---
-    await handleAIRequest(ctx, userSettings, userHistory, menus);
+    // --- 7. РАЗДЕЛЕНИЕ ДОСТУПА К ИИ ---
+    if (userId === config.ADMIN_ID) {
+        // Если пишешь ты — включается твой поиск/чат через обновленный aiHandler
+        await handleAIRequest(ctx, userSettings, userHistory, menus);
+    } else {
+        // Если пишет обычный пользователь (не в режиме чекапа и не кнопка меню)
+        await ctx.reply("✨ Чтобы пообщаться со звездами и получить разбор, выберите <b>🔮 Астро-чекап</b> в меню услуг.", { parse_mode: 'HTML' });
+    }
 });
-
 // Обработка всех кнопок, которые начинаются на order_
 bot.action(/^order_(.+)$/, async (ctx) => {
     const serviceType = ctx.match[1]; // получим 'lending', 'bot' и т.д.

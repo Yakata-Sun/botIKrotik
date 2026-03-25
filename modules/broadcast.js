@@ -5,12 +5,12 @@ const { Markup } = require('telegraf');
 /**
  * Модуль массовой рассылки контента.
  * @param {Object} ctx - Контекст Telegraf.
- * @param {Object} userSettings - Все пользователи из БД.
+ * @param {Object} userHistory - Все пользователи из БД.
  * @param {Object} menus - Модуль клавиатур.
  * @param {Object} content - Объект { text, photo, file, url }.
  */
-async function startBroadcast(ctx, userSettings, menus, content) {
-    const allIds = Object.keys(userSettings);
+async function startBroadcast(ctx, userHistory, menus, content) {
+    const allIds = Object.keys(userHistory);
     let success = 0;
     let failed = 0;
 

@@ -18,5 +18,15 @@
       "success": 2,
       "failed": 0
     }
+  },
+  {
+    "date": "26.03.2026, 00:17:09",
+    "text": "Fhkkk",
+    "type": "text",
+    "stats": {
+      "total": 0,
+      "success": 0,
+      "failed": 0
+    }
   }
 ]

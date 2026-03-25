@@ -20,21 +20,21 @@ module.exports = {
     BROADCAST_LOG: path.join(__dirname, '..', 'data', 'broadcasts.json'),
      QUESTIONS_FILE: path.join(__dirname, '..', 'data', 'questions.json'), 
      MAX_HISTORY_DAYS: 3,
-    DEFAULT_MODEL: 'deepseek/deepseek-chat',
+    DEFAULT_MODEL: 'cognitivecomputations/dolphin-mistral-24b-venice-edition:free',
     MAX_HISTORY: 10,
      MODELS: {
         'Qwen 2.5 (HF)': 'hf:Qwen/Qwen2.5-72B-Instruct', 
-        'GPT-os(HF)': 'hf:openai/gpt-oss-20b',
-        'Llama(HF)': 'hf:meta-llama/Llama-3.1-8B-Instruct',
+        'GPT-oss': 'openai/gpt-oss-120b:free',
+        'Gemma 3-27': 'google/gemma-3-27b-it:free',
         'Claude': 'anthropic/claude-3-haiku',
-         'Gemma 3 (OR)': 'google/gemma-3-27b-it:free',
-        'Mistral 7B (Free)': 'mistralai/mistral-7b-instruct:free',
-        'DeepSeek (OR)': 'deepseek/deepseek-chat',
-    '🌍 Поиск в Google': 'search:Qwen/Qwen2.5-72B-Instruct' // Модель Qwen будет "думать" над результатами поиск
+         'Gemma 3': 'google/gemma-3n-e2b-it:free',
+        'Mistral': 'cognitivecomputations/dolphin-mistral-24b-venice-edition:free',
+        'DeepSeek': 'deepseek/deepseek-chat',
+    '🌍 Поиск в Google': 'search:deepseek/deepseek-chat' // Модель Qwen будет "думать" над результатами поиск
     },
     ASTRO_MODELS: [
         'deepseek/deepseek-chat',             // Основная (умная)
-        'google/gemma-3-27b-it:free',         // Резерв 1 (новая бесплатная)
-        'mistralai/mistral-7b-instruct:free'  // Резерв 2 (стабильная бесплатная)
+        'google/gemma-3n-e2b-it:free',         // Резерв 1 (новая бесплатная)
+        'openai/gpt-oss-120b:free'  // Резерв 2 (стабильная бесплатная)
     ]
 };

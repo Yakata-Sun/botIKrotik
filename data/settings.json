@@ -3,10 +3,29 @@
     "selectedModel": "deepseek/deepseek-chat",
     "mode": "short"
   },
-  "1893912621": {
-    "selectedModel": "hf:Qwen/Qwen3.5-27B",
-    "mode": "long",
-    "waitingForAuthor": false,
+  "276798698": {
+    "selectedModel": "cognitivecomputations/dolphin-mistral-24b-venice-edition:free",
+    "mode": "short",
     "isAstroCheck": false
+  },
+  "1567478547": {
+    "selectedModel": "deepseek/deepseek-chat",
+    "mode": "short",
+    "isAstroCheck": false,
+    "waitingForAuthor": false
+  },
+  "1893912621": {
+    "selectedModel": "deepseek/deepseek-chat",
+    "mode": "short",
+    "waitingForAuthor": false,
+    "isAstroCheck": false,
+    "isBroadcasting": false,
+    "useSearch": true,
+    "waitingForBroadcastPhoto": false,
+    "waitingForBroadcastText": false,
+    "waitingForConfirm": false,
+    "broadcastDraftText": null,
+    "broadcastPhotoId": null,
+    "broadcastFileId": null
   }
 }
