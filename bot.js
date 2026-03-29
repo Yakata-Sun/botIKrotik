@@ -17,6 +17,7 @@ const registerCommands = require('./modules/commands');
 const startBroadcast = require('./modules/broadcast');
 const handleBroadcast = require('./modules/broadcastHandler');
 const handleAIRequest = require('./modules/aiHandler');
+const registerActions = require('./modules/actions');
 const funnel = require('./modules/funnel');
 const utils = require('./modules/utils');
 const astro = require('./modules/astro');
@@ -70,8 +71,6 @@ bot.on('message', async (ctx) => {
         };
         storage.save(config.SETTINGS_FILE, userSettings);
     }
-    
-   
  
     // --- 2. ЛОГИКА АДМИН-РАССЫЛКИ ---
     const isBroadcastActive = await handleBroadcast(ctx, userSettings, menus, startBroadcast, userHistory);
@@ -79,6 +78,11 @@ bot.on('message', async (ctx) => {
 
     // --- 3. ФИЛЬТРАЦИЯ ТЕКСТА ---
     if (!text) return;
+
+     // ---  ПРОВЕРКА ВОРОНКИ СКАЗКИ ---
+    // Если пользователь на этапе ввода животного, funnel.handleText вернет true и прервет дальнейший код
+    const isFunnelStep = await funnel.handleText(ctx, userSettings);
+    if (isFunnelStep) return; 
 
     // --- 4. АСТРО-ЧЕКАП (Геймификация для всех) ---
     if (userSettings[userId].isAstroCheck) {
@@ -108,47 +112,15 @@ bot.on('message', async (ctx) => {
         await ctx.reply("✨ Чтобы пообщаться со звездами и получить разбор, выберите <b>🔮 Астро-чекап</b> в меню услуг.", { parse_mode: 'HTML' });
     }
 });
-// Обработка всех кнопок, которые начинаются на order_
-bot.action(/^order_(.+)$/, async (ctx) => {
-    const serviceType = ctx.match[1]; // получим 'lending', 'bot' и т.д.
-    const user = ctx.from;
-
-    // 1. Уведомление тебе в личку
-    const report = `🔔 <b>НОВАЯ ЗАЯВКА!</b>\n\n` +
-                   `📦 Услуга: <code>${serviceType}</code>\n` +
-                   `👤 Клиент: ${user.first_name} (@${user.username || 'нет'})\n` +
-                   `🆔 ID: <code>${user.id}</code>`;
-
-    await ctx.telegram.sendMessage(config.ADMIN_ID, report, { parse_mode: 'HTML' });
-
-    // 2. Красивый ответ пользователю
-    await ctx.answerCbQuery(); // Убирает "часики" на кнопке
-    await ctx.reply("✨ Спасибо! Ваша заявка получена. Мария свяжется с вами в ближайшее время.");
-});
-
-funnel.init(bot); //воронка сказки
-
-
-// --- МИНИ-ВОРОНКА: БЫСТРЫЙ КОУЧИНГ ---
-bot.action('fast_coaching_start', async (ctx) => {
-    await ctx.answerCbQuery();
-    
-    // Получите ID вашего чек-листа (PDF), отправив его боту
-    const checklistId = 'ВАШ_FILE_ID_ЧЕКЛИСТА_БЫСТРЫЙ_КОУЧИНГ'; 
-
-    await ctx.reply(
-        "💪 Отличный выбор! Первый шаг к решению — это честный взгляд на ситуацию.\n\n" +
-        "Ловите чек-лист, который поможет вам подготовиться к сессии и точно сформулировать запрос.",
-        { parse_mode: 'HTML' }
-    );
-
-    // Отправляем файл и кнопку записи
-    await ctx.replyWithDocument(checklistId, {
-        caption: "📋 Чек-лист «Самодиагностика запроса»",
-        reply_markup: Markup.inlineKeyboard([
-            [Markup.button.url('📅 Забронировать сессию', 'https://t.me')]
-        ]).reply_markup
-    });
+// РЕГИСТРАЦИЯ ВСЕХ ACTIONS (Кнопок)
+// Просто вызываем функцию и передаем туда всё необходимое
+registerActions(bot, { 
+    userSettings, 
+    astro, 
+    funnel, 
+    storage,
+    menus, // если кнопки будут вызывать меню
+    config 
 });
 /**
  * Запуск бота и вывод уведомления в консоль

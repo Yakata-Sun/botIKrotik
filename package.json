@@ -15,6 +15,7 @@
     "axios": "^1.13.6",
     "dotenv": "^17.3.1",
     "lunar-javascript": "^1.7.7",
+    "node-schedule": "^2.1.1",
     "telegraf": "^4.16.3"
   }
 }
