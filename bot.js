@@ -81,7 +81,7 @@ bot.on('message', async (ctx) => {
 
      // ---  ПРОВЕРКА ВОРОНКИ СКАЗКИ ---
     // Если пользователь на этапе ввода животного, funnel.handleText вернет true и прервет дальнейший код
-    const isFunnelStep = await funnel.handleText(ctx, userSettings);
+    const isFunnelStep = await funnel.init(bot);
     if (isFunnelStep) return; 
 
     // --- 4. АСТРО-ЧЕКАП (Геймификация для всех) ---

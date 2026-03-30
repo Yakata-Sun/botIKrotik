@@ -8,7 +8,7 @@ const fs = require("fs");
 const path = require("path");
 const schedule = require("node-schedule");
 const utils = require("./utils"); // Твой модуль с sendPDF и trackFileIds
-const kb = require("./utils/keyboards"); // Модуль для генерации сеток кнопок
+const kb = require("./keyboards"); // Модуль для генерации сеток кнопок
 
 const funnel = {
   configPath: path.join(process.cwd(), "data", "funnel_config.json"),
@@ -101,7 +101,7 @@ const funnel = {
 
       const text = `<b>Выбрана локация: ${loc.name}</b>\n\nЭтот образ ${loc.desc}\n\n✨ <b>Кто ждет тебя там?</b> Выбери своего Хранителя:`;
       const keyboard = Markup.inlineKeyboard([
-        [Markup.button.callback("👴 Мудрый Старец", "guide_old")],
+        [Markup.button.callback("👴 Мудрый/ая наставник/ца", "guide_old")],
         [Markup.button.callback("🐆 Тотемное Животное", "guide_animal")],
         [Markup.button.callback("✨ Сияющий Свет", "guide_light")],
       ]);
@@ -111,45 +111,69 @@ const funnel = {
         ...keyboard,
       });
     });
-
-    // --- ШАГ 3: ТЕНЬ (ПРЕГРАДА) ---
     bot.action(/^guide_(.+)$/, async (ctx) => {
       await ctx.answerCbQuery();
       const data = funnel.getData();
-      const text =
-        "Хранитель дает тебе силу. Но дорогу преграждает <b>Тень старого сценария</b>. Выбери самую «тяжелую» карту:";
+
+      // Сразу подтверждаем выбор коротким текстом
+      await ctx.reply("✨ Твой Хранитель услышал твой зов...");
+
+      // Через 3 секунды присылаем глубокое напутствие с кнопкой
+      setTimeout(async () => {
+        const wisdomText = `✨ <b>Подробно представь своего Хранителя...</b>\n\nНаполни его мудростью и силой. Представь, что он делится с тобой этой энергией, и ты становишься лучшей версией себя. Это состояние — твой компас в Путешествии.`;
+        
+        const keyboard = Markup.inlineKeyboard([
+          [Markup.button.callback("✨ Я чувствую эту силу", "show_shadow_cards")]
+        ]);
+
+        await ctx.reply(wisdomText, {
+          parse_mode: "HTML",
+          ...keyboard,
+        });
+      }, 3000);
+    });
+
+    // --- ШАГ 3: ТЕНЬ (ПРЕГРАДА) ---
+     bot.action("show_shadow_cards", async (ctx) => {
+      await ctx.answerCbQuery();
+      const data = funnel.getData();
+
+      const text = "Хранитель дал тебе силу. Но дорогу преграждает <b>Тень старого сценария</b>. Выбери самую «тяжелую» карту:";
+      
       await ctx.sendPhoto(data.images.all_shd_sheet, {
         caption: text,
         parse_mode: "HTML",
-        ...kb.makeGrid("shd", 9),
+        ...kb.makeGrid("shd", 9), // Твоя сетка из модуля keyboards
       });
     });
-
-    // --- ШАГ 4: ТЕНЬ + ПРАКТИКА (ПАУЗА 5 СЕК) ---
-    bot.action(/^shd_(\d+)$/, async (ctx) => {
+     bot.action(/^shd_(\d+)$/, async (ctx) => {
       await ctx.answerCbQuery();
       const data = funnel.getData();
       const shd = data.content.shadows[ctx.match[1]];
 
-      const intro = `<b>Тень: ${shd.title}.</b>\nЭто ${shd.trauma}.\n\n🧘 <b>Практика:</b> Выйди в роль Наблюдателя. Какой развязки ты хочешь на самом деле? Проживи её в мыслях...`;
+      const intro = `<b>Тень: ${shd.title}.</b>\nЭто ${shd.trauma}.\n\n🧘 <b>Практика:</b> Теперь встряхнись, потопай ногами, посмотри вокруг и войди в роль Наблюдателя нашего сюжета. Какой развязки ты хочешь на самом деле? Проживи её в мыслях...`;
+      
       await ctx.sendPhoto(data.images.shadow_cards[ctx.match[1]], {
         caption: intro,
         parse_mode: "HTML",
       });
 
+      // --- ПАУЗА 1: ГЛУБОКОЕ ПРОЖИВАНИЕ (3 секунды) ---
       setTimeout(async () => {
-        const text = `✨ <b>Практика завершена.</b>\nЗабирай PDF-инструкцию «Глазами Наблюдателя», чтобы этот инструмент всегда был с тобой.`;
-        const keyboard = Markup.inlineKeyboard([
-          [
-            Markup.button.callback(
-              "📑 Скачать практику (PDF)",
-              "download_practice",
-            ),
-          ],
-          [Markup.button.callback("🚀 Идти к финалу", "show_offer")],
-        ]);
-        await ctx.reply(text, { parse_mode: "HTML", ...keyboard });
-      }, 5000);
+        const deepenText = `✨ <b>Вернись в ситуацию</b> и подробно проживи её так, как ты только что придумал(а)... Наблюдай за изменениями в теле.`;
+        await ctx.reply(deepenText, { parse_mode: "HTML" }).catch(() => {});
+
+        // --- ПАУЗА 2: ЗАВЕРШЕНИЕ ПРАКТИКИ (через 5 секунд после первой паузы) ---
+        setTimeout(async () => {
+          const text = `✨ <b>Практика завершена.</b>\nЗабирай PDF-инструкцию с объяснениями «Режиссерская версия», чтобы этот инструмент всегда был с тобой.`;
+          const keyboard = Markup.inlineKeyboard([
+            [Markup.button.callback("📑 Скачать практику (PDF)", "download_practice")],
+            [Markup.button.callback("🚀 Идти к финалу", "show_offer")],
+          ]);
+          await ctx.reply(text, { parse_mode: "HTML", ...keyboard }).catch(() => {});
+        }, 5000); 
+
+      }, 3000);
     });
 
     // --- ШАГ 4.1: СКАЧИВАНИЕ + МОСТИК (ПАУЗА 7 СЕК) ---
@@ -175,47 +199,75 @@ const funnel = {
       }, 7000);
     });
 
-    // --- ШАГ 5: ОФФЕР И ЦЕНЫ ---
+    // --- ШАГ 5: ОФФЕР ---
     bot.action("show_offer", async (ctx) => {
+      await ctx.answerCbQuery().catch(() => {});
+      const data = funnel.getData();
+      const p = data.prices;
+
+      // Ищем цену для зачеркивания в массиве list
+      const fullPrice = p.list.find((item) => item.id === "full")?.price || "";
+
+      const text =
+        `🗺 <b>Курс-путешествие "Архитектор своего сценария"</b>\n\n` +
+        `🏆 <b>Спеццена: ${p.special}</b> (вместо ${fullPrice})\n` +
+        `⏳ Забронируй место всего за <b>${p.reserve}</b>!`;
+
+      // Вызываем метод из keyboards.js
+      const keyboard = kb.offerMenu(p.reserve, p.pay_url);
+
+      try {
+        await ctx.editMessageCaption(text, { parse_mode: "HTML", ...keyboard });
+      } catch (e) {
+        await ctx.sendPhoto(data.images.offer_main, {
+          caption: text,
+          parse_mode: "HTML",
+          ...keyboard,
+        });
+      }
+    });
+
+    // --- ШАГ 5.1: ДЕТАЛЬНЫЕ ЦЕНЫ ---
+    bot.action("show_prices", async (ctx) => {
+      await ctx.answerCbQuery().catch(() => {});
+      const data = funnel.getData();
+      const p = data.prices;
+
+      const priceRows = p.list
+        .map(
+          (item) =>
+            `🔹 <b>${item.name}</b> — <b>${item.price}</b>\n<i>${item.desc}</i>`,
+        )
+        .join("\n\n");
+
+      const fullText =
+        `📜 <b>Стоимость и форматы участия:</b>\n\n${priceRows}\n\n` +
+        `✨ <i>Выбирай свой формат и нажимай кнопку ниже:</i>`;
+
+      // Вызываем метод из keyboards.js
+      await ctx
+        .editMessageCaption(fullText, {
+          parse_mode: "HTML",
+          ...kb.pricesMenu(p.pay_url),
+        })
+        .catch(() => {});
+    });
+    /**
+     * ОБРАБОТЧИК ПОДТВЕРЖДЕНИЯ ОПЛАТЫ
+     */
+    bot.action("confirm_payment", async (ctx) => {
       await ctx.answerCbQuery();
       const data = funnel.getData();
-      funnel.scheduleReminder(ctx);
 
-      const text = `🗺 <b>Курс-путешестие "Архитектор своего сценария"</b>\n\n🏆 <b>Весь путь: ${data.prices.special}</b> (вместо ${data.prices.full})\n⏳ Забронируй скидку за ${data.prices.reserve}!`;
-      const keyboard = Markup.inlineKeyboard([
-        [
-          Markup.button.url(
-            `🔥 Забронировать (${data.prices.reserve})`,
-            "https://pay.ru",
-          ),
-        ],
-        [Markup.button.callback("✅ Я оплатил(а)", "confirm_payment")],
-        [Markup.button.callback("📖 Отзывы", "show_reviews")],
-        [Markup.button.callback("💬 Связаться", "contact_admin")],
-      ]);
-      await ctx.sendPhoto(data.images.offer_main, {
-        caption: text,
-        parse_mode: "HTML",
-        ...keyboard,
-      });
+      // Вызываем вынесенную логику
+      await utils.handlePaymentConfirmation(ctx, data);
     });
-/**
- * ОБРАБОТЧИК ПОДТВЕРЖДЕНИЯ ОПЛАТЫ
- */
-bot.action("confirm_payment", async (ctx) => {
-    await ctx.answerCbQuery();
-    const data = funnel.getData();
-
-    // Вызываем вынесенную логику
-    await utils.handlePaymentConfirmation(ctx, data);
-});
     // --- СВЯЗЬ С АДМИНОМ ---
     bot.action("contact_admin", async (ctx) => {
       await ctx.answerCbQuery();
       const data = funnel.getData();
       await ctx.reply(`По всем вопросам пиши мастеру: @${data.admin_username}`);
     });
-
   },
 };
 

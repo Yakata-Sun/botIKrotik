@@ -16,18 +16,28 @@ module.exports = {
         while (buttons.length) rows.push(buttons.splice(0, 3));
         return Markup.inlineKeyboard(rows);
     },
-
+/**
+     * Меню детальных цен
+     * @param {string} reserveUrl - Ссылка на бронь
+     */
+    pricesMenu: (payUrl) => {
+        return Markup.inlineKeyboard([
+            [Markup.button.url('🔥 Забронировать место', payUrl)],
+            [Markup.button.callback('⬅️ Вернуться к офферу', 'show_offer')]
+        ]);
+    },
     /**
      * Создает стандартное меню оффера
      * @param {string} payUrl - Ссылка на оплату
      * @param {string} reserveUrl - Ссылка на бронь
      */
-    offerMenu: (payUrl, reserveUrl) => {
+    offerMenu: (reservePrice, payUrl) => {
         return Markup.inlineKeyboard([
-            [Markup.button.url('🚀 Оплатить курс полностью', payUrl)],
-            [Markup.button.url('🔥 Забронировать скидку', reserveUrl)],
-            [Markup.button.callback('✅ Я оплатил(а)', 'confirm_payment')],
-            [Markup.button.callback('📖 Отзывы', 'show_reviews')]
+            [Markup.button.callback("💰 Посмотреть все форматы и цены", "show_prices")],
+            [Markup.button.url(`🔥 Забронировать (${reservePrice})`, payUrl)],
+            [Markup.button.callback("✅ Я оплатил(а)", "confirm_payment")],
+            [Markup.button.callback("📖 Отзывы", "show_reviews")],
+            [Markup.button.callback("💬 Связаться", "contact_admin")]
         ]);
     }
 };

@@ -1,19 +1,34 @@
 {
   "admin_username": "sherab_wangmo",
   "admin_id": "1893912621",
-  "pdf_id": "ЗДЕСЬ_БУДЕТ_FILE_ID_ВАШЕГО_PDF",
+  "pdf_id": "BQACAgIAAxkBAAIIu2nI3iBJuinuP8nvJdYLBIOZzYnMAAIckwACKNVJSslC_Iai21H-OgQ",
   "images": {
-    "start_welcome": "ID_ИЛИ_URL",
-    "all_loc_sheet": "ID_ИЛИ_URL",
-    "all_shd_sheet": "ID_ИЛИ_URL",
-    "reminder": "ID_ИЛИ_URL",
-    "offer_main": "ID_ИЛИ_URL",
+    "start_welcome": "AgACAgIAAxkBAAII_2nJF6Ms11DJr8RpA5pSJ13AOgscAALzEWsby7XhSx-4x1mtVeGyAQADAgADeQADOgQ",
+    "all_loc_sheet": "AgACAgIAAxkBAAIJIWnKNU0U-EdzViCv_teyJ7lTQKyyAAJgFmsbz6RQSgABxtsOoNyAbAEAAwIAA3kAAzoE",
+    "all_shd_sheet": "AgACAgIAAxkBAAIJI2nKNsQTH5Txvpm5JwYAARLju-6p3wACbRZrG8-kUEpsNti69HiLGAEAAwIAA3kAAzoE",
+    "reminder": "AgACAgIAAxkBAAIJJWnKP_NMVt0C1dMnEr5dJ6Hga7vSAAK9Fmsbz6RQSn50W1BdOn3uAQADAgADeQADOgQ",
+    "offer_main": "AgACAgIAAxkBAAIJGWnKJwABE0ayJmETHb6V5ujgFBc_TwACCxZrG8-kUErchDdl4kVnagEAAwIAA3kAAzoE",
     "loc_cards": {
-      "creek": "ID", "house": "ID", "forest": "ID", "mountain": "ID",
-      "sea": "ID", "village": "ID", "road": "ID", "park": "ID", "cave": "ID"
+      "creek": "AgACAgIAAxkBAAIIx2nI55NOuw2lK16z6-FUWpVDmiT9AAJYFWsbKNVJShEY8lndK-zhAQADAgADeQADOgQ", 
+      "house": "AgACAgIAAxkBAAIIyWnI57JOscAS5S3VJOiFBgc0iykKAAJZFWsbKNVJSn-QKGM-jb9TAQADAgADeQADOgQ", 
+      "forest": "AgACAgIAAxkBAAIJAWnJF-9e2E4ysjELWrfAOaopeARxAAKiFWsbA3DBSS5kgLCRx-ksAQADAgADeQADOgQ", 
+      "mountain": "AgACAgIAAxkBAAIIzWnI58N5F3qVbwcSVsfEyOvz5W5WAAJbFWsbKNVJSle1E19YHy9_AQADAgADeQADOgQ",
+      "sea": "AgACAgIAAxkBAAIJHWnKL4RvGMOxU_RrPLmZ-lYL64PPAAI1Fmsbz6RQSkacv536mXmEAQADAgADeQADOgQ", 
+      "village": "AgACAgIAAxkBAAIJH2nKL431HJdeCEcuKIWKmvuO45NpAAI2Fmsbz6RQSu9zW5mtszOZAQADAgADdwADOgQ", 
+      "road": "AgACAgIAAxkBAAII0WnI91S6a6wWEBK_LqpxrQu5gp4MAALSFWsbKNVJSp7RSRSTHFcZAQADAgADeQADOgQ", 
+      "park": "AgACAgIAAxkBAAIIz2nI6aYRed6H0KArZSzRo3BIXFMpAAJqFWsbKNVJSvdge2XL3LbfAQADAgADeQADOgQ", 
+      "cave": "AgACAgIAAxkBAAII02nJBMAl2FrI9YOTwo2WrgUViDdfAAIsFmsbKNVJSl_oQiPk4CiOAQADAgADeQADOgQ"
     },
     "shadow_cards": {
-      "1": "ID", "2": "ID", "3": "ID", "4": "ID", "5": "ID", "6": "ID", "7": "ID", "8": "ID", "9": "ID"
+      "1": "AgACAgIAAxkBAAIJD2nJRF5gCs2hy0BGRR_BSKlcr6XKAAL2F2sbKNVJSrurbZMP40CYAQADAgADeQADOgQ",
+       "2": "AgACAgIAAxkBAAIJB2nJP_kXvGFpsK_JrPqozF33I_5jAALUF2sbKNVJSrvTRa7nd2yVAQADAgADeQADOgQ", 
+       "3": "AgACAgIAAxkBAAIJG2nKJwWecQFVleTagZGFm4YkUYjDAAIMFmsbz6RQSiPqsy4k4jD6AQADAgADeQADOgQ", 
+       "4": "AgACAgIAAxkBAAIJFWnKGDayvhV18td6K6XVoEshrh5tAAIWFWsbz6RQSn6xqt5dm3nhAQADAgADeQADOgQ", 
+       "5": "AgACAgIAAxkBAAIJBWnJP_mTKyY3nR8TEyyRzXJkIB4yAALTF2sbKNVJSqyvMsF-1gf6AQADAgADeQADOgQ", 
+       "6": "AgACAgIAAxkBAAIJA2nJP_fXViAV_0QR_oXibmQ1gXRbAALSF2sbKNVJSt3pSQZ8F2f5AQADAgADeQADOgQ", 
+       "7": "AgACAgIAAxkBAAIJA2nJP_fXViAV_0QR_oXibmQ1gXRbAALSF2sbKNVJSt3pSQZ8F2f5AQADAgADeQADOgQ", 
+       "8": "AgACAgIAAxkBAAIJEWnKGCiChUWwseHmFSIbb3up61QpAAITFWsbz6RQSmKKzcsdCe6iAQADAgADeQADOgQ", 
+       "9": "AgACAgIAAxkBAAIJE2nKGC-fqhxa92HyICnL2i2-2PnYAAIUFWsbz6RQSgqClFs7sEscAQADAgADeQADOgQ"
     },
     "reviews": []
   },
@@ -30,22 +45,25 @@
       "9": { "id": "cave", "name": "🕳 Пещера", "desc": "символизирует скрытые стороны личности и твои страхи." }
     },
     "shadows": {
-      "1": { "title": "Клетка ожиданий", "trauma": "запрет на свободу быть собой и страх не соответствовать другим" },
-      "2": { "title": "Замёрзшее сердце", "trauma": "страх душевной близости и блокировка живых эмоций" },
-      "3": { "title": "Бег по кругу", "trauma": "сценарий 'успех — это непосильная ноша', ведущий к выгоранию" },
+      "1": { "title": "Запертый в клетку", "trauma": "запрет на свободу быть собой" },
+      "2": { "title": "Защита от мира", "trauma": "страх душевной близости и блокировка живых эмоций" },
+      "3": { "title": "Боязнь успеха", "trauma": "успех — это непосильная ноша, ведущий к выгоранию" },
       "4": { "title": "Тень критика", "trauma": "внутренний голос, который обесценивает каждый твой шаг" },
-      "5": { "title": "Туман неопределенности", "trauma": "паралич выбора и страх совершить фатальную ошибку" },
+      "5": { "title": "Отчаяние", "trauma": "потерянность, разочарование, самобичевание" },
       "6": { "title": "Груз прошлого", "trauma": "багаж старых обид и ошибок, которые не дают взлететь" },
-      "7": { "title": "Маска чужой роли", "trauma": "потеря контакта со своими истинными желаниями ради других" },
-      "8": { "title": "Стена страха", "trauma": "иллюзия непреодолимых преград, созданная защитами психики" },
-      "9": { "title": "Невидимые нити", "trauma": "ощущение, что ты не управляешь своей жизнью, а лишь исполняешь сценарий" }
+      "7": { "title": "Бесконечная дорога нетуда", "trauma": "потеря контакта со своими истинными желаниями ради других" },
+      "8": { "title": "Стена страха", "trauma": "иллюзия непреодолимых преград" },
+      "9": { "title": "Невидимые нити", "trauma": "ощущение, что ты не управляешь своей жизнью" }
     }
   },
-  "prices": {
-    "impulse": "2 500 ₽",
-    "chat": "8 500 ₽",
-    "full": "11 000 ₽",
-    "special": "6 500 ₽",
-    "reserve": "1 000 ₽"
-  }
+ "prices": {
+  "list": [
+    { "id": "impulse", "name": "«Разовый импульс»", "price": "2 500 ₽", "desc": "оплата за каждую сессию отдельно. Подходит, чтобы попробовать метод." },
+    { "id": "chat", "name": "«Бережное сопровождение»", "price": "8 500 ₽", "desc": "формат чата после одной онлайн-сессии (до 2-х месяцев)." },
+    { "id": "full", "name": "«Полный маршрут»", "price": "11 000 ₽", "desc": "весь курс (пакетом). Самый эффективный формат." },
+    { "id": "special", "name": "Спецпредложение", "price": "6 500 ₽", "desc": "для тех, кто уже проходил сессию «Карта Пути» или прошел здесь эту мини-практику." }
+  ],
+  "reserve": "1 000 ₽",
+  "pay_url": "https://pay.ru"
+}
 }
