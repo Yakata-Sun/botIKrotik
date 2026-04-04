@@ -15,7 +15,7 @@ module.exports = {
         let keyboard = [
             [{ text: '🔮 Узнать свой Путь (Чекап)' }], // Самая большая кнопка-магнит
             [{ text: '🎭 Мои Услуги' }, { text: '✍️ Задать вопрос' }],
-            [{ text: '❓ О методе' }]
+            [{ text: '❓ Справка' }]
         ];
 
         if (isAdmin) {
@@ -66,7 +66,7 @@ module.exports = {
     dev: () => ({
         reply_markup: {
             keyboard: [
-                [{ text: '🤖 Создание ботов' }, { text: '⚙️ Создание лендинга' }],
+                [{ text: '🤖 Создание ботов' }, { text: '⚙️ Web-разработка' }],
                 [{ text: '⬅️ Назад в услуги' }]
             ],
             resize_keyboard: true

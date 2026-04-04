@@ -36,5 +36,6 @@ module.exports = {
         'deepseek/deepseek-chat',             // Основная (умная)
         'google/gemma-3n-e2b-it:free',         // Резерв 1 (новая бесплатная)
         'openai/gpt-oss-120b:free'  // Резерв 2 (стабильная бесплатная)
-    ]
+    ],
+    COMPASS_PHOTO_ID: 'AgACAgIAAxkBAAIKYmnQ4RewBOA33sS4FVVHfRn39WTCAAJ2E2sbLSCJSvp0T6m-MK4bAQADAgADeAADOwQ'
 };

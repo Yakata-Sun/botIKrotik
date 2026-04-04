@@ -13,7 +13,7 @@ const astro = {
         const text = ctx.message.text;
 
         // 0. Проверка на выход из режима (оставляем вашу логику)
-        const menuButtons = ['💎 Услуги', '📈 Карта Пути', '✨ Курс-путешествие', '⬅️ Назад', 'Главное меню'];
+        const menuButtons = ['🎭 Мои Услуги', '✨ Самопознание и Сказки', '💻 IT-разработка (Боты/Сайты)', '⬅️ В главное меню', '📈 Карта Пути (Сессия)', '✨ Курс-Путешествие', '⬅️ Назад в услуги', '✍️ Задать вопрос', '❓ Справка', '⚙️ Админ-панель'];
         if (menuButtons.includes(text)) {
             userSettings[userId].isAstroCheck = false;
             return false; 
@@ -32,11 +32,9 @@ const astro = {
                 Markup.inlineKeyboard([
                     [Markup.button.callback('🌀 Разбрасываюсь / Берусь сразу за многое', 'goal_scattered')],
                     [Markup.button.callback('🛡️ Боюсь начать / Сомневаюсь', 'goal_fear')],
-                    [Markup.button.callback('🛤️ Ищу свое предназначение', 'goal_mission')],
-                    
+                    [Markup.button.callback('🛤️ Ищу свое предназначение', 'goal_mission')],            
         [Markup.button.callback('🧭 Потерялся, не знаю куда идти', 'goal_lost')], 
         [Markup.button.callback('🔋 Нет сил, где найти ресурс?', 'goal_no_energy')], 
-        
                     [Markup.button.callback('💎 Хочу масштаб и рост', 'goal_growth')]
                 ])
             );

@@ -22,8 +22,6 @@ module.exports = async (ctx, userSettings, userHistory) => {
     const isAdmin = String(userId) === String(config.ADMIN_ID);
      let count = Object.keys(userHistory).length; // Считаем ID в базе
 
-   console.log(`Проверка админа: Ваш ID ${userId}, ID в конфиге ${config.ADMIN_ID}, Итог: ${userId === config.ADMIN_ID}`);
-
   // Если настроек нет (защита от ошибок), выходим
   if (!settings) return false;
 
@@ -48,10 +46,10 @@ module.exports = async (ctx, userSettings, userHistory) => {
     case "🔮 Повторить Чекап":
       settings.isAstroCheck = true;
       storage.save(config.SETTINGS_FILE, userSettings);
-      return await ctx.reply("✨ Привет! я мастер китайской астрологии Ба Цзы. Напиши свою дату и время рождения (например: 26.08.1983 14:30), чтобы я построила твою карту.");
+      return await ctx.reply("✨ Привет! Я мастер китайской астрологии Ба Цзы. Напиши свою дату и время рождения (используй формат дд.мм.гггг чч:мм), чтобы я построил твою карту.");
 
-    case "❓ О методе":
-      return await ctx.reply("Я — твой проводник в мире коучинга, сказкотерапии и Ба Цзы. Помогаю найти ответы внутри себя, делюсь подарками и инсайтами. Если хочешь узнать подробнее напиши моей разработчице Марии напрямую: @sherab_wangmo");
+    case "❓ Справка":
+      return await ctx.reply("Я — твой проводник в мире коучинга, сказкотерапии и Ба Цзы. Помогаю найти ответы внутри себя, делюсь подарками и инсайтами.\n Если хочешь узнать что-то подробнее напиши моей разработчице Марии напрямую: @sherab_wangmo");
 
     // --- КАТЕГОРИИ УСЛУГ ---
     case "🎭 Мои Услуги":
@@ -122,10 +120,10 @@ module.exports = async (ctx, userSettings, userHistory) => {
       settings.isAstroCheck = false;
       storage.save(config.SETTINGS_FILE, userSettings);
       return await ctx.reply(
-        `✨ <b>Твоя жизнь — это сказка, где ТЫ — Автор сценария</b>\n\n` +
-        `Если ты чувствуешь, что застрял в "Дне сурка", играешь роль второго плана, не знаешь куда идти, значит пора переписать сюжет. Мой метод объединяет <b>коучинг, сказкотерапию и символдраму</b>.\n\n` + 
+        `✨ <b>Твоя жизнь — это сказка, где ТЫ — Архитектор своей Истории</b>\n\n` +
+        `Если ты чувствуешь, что застрял в "Дне сурка", играешь роль второго плана, не знаешь куда идти или как найти свой ресурс, значит пора переписать сюжет. Мой метод объединяет <b>коучинг, сказкотерапию и символдраму</b>.\n\n` + 
         `<b>Что мы сделаем в путешествии:</b>\n` +
-        `• Найдем твоих внутренних "Драконов" и заберем у них ресурс\n` +
+        `• Найдем твоих внутренних "Драконов", заберем у них ресурс или превратим в твоих защитников\n` +
         `• Проложим маршрут к твоей истинной цели\n` +
         `• Напишем терапевтическую сказку, которая станет твоим планом победы\n\n` +
         `🎁 Нажми кнопку ниже, чтобы получить подарок — <b>практику «Встреча с Хранителем»</b> и увидеть программу!`,
@@ -153,14 +151,12 @@ module.exports = async (ctx, userSettings, userHistory) => {
         `Готов составить свою карту?`,
         { 
           parse_mode: 'HTML',
-          reply_markup: {
-            inline_keyboard: [
-              [{ text: '🚀 Да, я хочу на сессию!', callback_data: 'fast_coaching_start' }],
-              [{ text: '✉️ Задать вопрос напрямую', url: 'https://t.me/sherab_wangmo' }]
-            ]
+           ...Markup.inlineKeyboard([
+                [Markup.button.callback('🚀  Да, я хочу на сессию!', 'order_map-kouch')],
+                [Markup.button.url('✉️ Обсудить в ЛС', 'https://t.me/sherab_wangmo')]
+            ])
           }
-        }
-      );
+           );
 
     case "🔮 Повторить Чекап":
       settings.isAstroCheck = true;
@@ -179,47 +175,14 @@ module.exports = async (ctx, userSettings, userHistory) => {
       return await ctx.reply(
         "<b>🤖 Создание умных ботов</b>\n\n" +
         "Разрабатываю не просто код, а <b>автоматизированные воронки продаж</b> с интеграцией ИИ (GPT/Claude). \n\n" +
-        "Этот бот, в котором вы сейчас находитесь — пример того, как система может сама сегментировать клиентов и делать расчеты Ба Цзы.\n\n" +
-        "📍 <b>Срок:</b> от 7 дней\n" +
+        "Этот бот, в котором вы сейчас находитесь — пример того, как система может сама сегментировать клиентов и использовать ИИ для более умных, персонализированных ответов.\n\n" +
+        "📍 <b>Срок:</b> от 10 дней\n" +
         "💳 <b>Стоимость:</b> от 15 000 ₽", 
         { 
             parse_mode: 'HTML',
             ...Markup.inlineKeyboard([
                 [Markup.button.callback('🚀 Оставить заявку', 'order_bot')],
-                [Markup.button.url('✉️ Обсудить в ЛС', 'https://t.me')]
-            ])
-        }
-      );
-
-    case "⚙️ Создание лендинга":
-      settings.isAstroCheck = false;
-      storage.save(config.SETTINGS_FILE, userSettings);
-      return await ctx.reply(
-        "<b>⚙️ Продающие лендинги</b>\n\n" +
-        "Создаю современные страницы с высокой конверсией. Помогаю упаковать смыслы вашего продукта, чтобы сайт не просто висел, а приносил заявки.\n\n" +
-        "📍 <b>Срок:</b> от 14 дней\n" +
-        "💳 <b>Стоимость:</b> от 15 000 ₽",
-        { 
-            parse_mode: 'HTML',
-            ...Markup.inlineKeyboard([
-                [Markup.button.callback('🚀 Оставить заявку', 'order_lending')],
-                [Markup.button.url('🎨 Посмотреть портфолио', 'https://t.me')] // Замените на свою ссылку если есть
-            ])
-        }
-      );
-
-    case "🤖 Доработка ботов":
-      settings.isAstroCheck = false;
-      storage.save(config.SETTINGS_FILE, userSettings);
-      return await ctx.reply(
-        "<b>🤖 Второе дыхание для вашего бота</b>\n\n" +
-        "Исправляю ошибки, добавляю новые функции (платежи, ИИ, рассылки) и оптимизирую текущий код для стабильной работы.\n\n" +
-        "📍 <b>Срок:</b> от 5 дней\n" +
-        "💳 <b>Стоимость:</b> от 5 000 ₽",
-        { 
-            parse_mode: 'HTML',
-            ...Markup.inlineKeyboard([
-                [Markup.button.callback('🚀 Оставить заявку', 'order_bot_good')]
+                [Markup.button.url('✉️ Обсудить в ЛС', 'https://t.me/sherab_wangmo')]
             ])
         }
       );
@@ -229,13 +192,14 @@ module.exports = async (ctx, userSettings, userHistory) => {
       storage.save(config.SETTINGS_FILE, userSettings);
       return await ctx.reply(
         "<b>⚙️ Fullstack Web-разработка</b>\n\n" +
-        "Создание интерфейсов, верстка макетов и разработка backend-части на Node.js. Реализую ваши идеи: от личных кабинетов до сложных калькуляторов.\n\n" +
+        "Создание интерфейсов, сайтов, верстка макетов, разработка backend-части на Node.js. Реализую ваши идеи: от личных кабинетов до сложных калькуляторов.\n\n" +
         "📍 <b>Срок:</b> от 7 дней\n" +
         "💳 <b>Стоимость:</b> от 15 000 ₽",
         { 
             parse_mode: 'HTML',
             ...Markup.inlineKeyboard([
-                [Markup.button.callback('🚀 Оставить заявку', 'order_web')]
+                [Markup.button.callback('🚀 Оставить заявку', 'order_web')],
+                [Markup.button.url('✉️ Обсудить в ЛС', 'https://t.me/sherab_wangmo')]
             ])
         }
       );

@@ -61,25 +61,8 @@ const funnel = {
   },
 
   init: (bot) => {
-    // --- СТАРТ / RE-ENGAGEMENT ---
-    bot.start(async (ctx) => {
-      const data = funnel.getData();
-      if (ctx.startPayload === "pay")
-        return bot.handleAction("show_offer", ctx); // Deep Link
-
-      const text = `✨ <b>Приветствую, Странник!</b>\n\nТы на пороге своей новой истории. Как начнем путь?`;
-      const keyboard = Markup.inlineKeyboard([
-        [Markup.button.callback("🔮 Пройти диагностику", "funnel_gift")],
-        [Markup.button.callback("🚀 Записаться / Оплатить", "show_offer")],
-        [Markup.button.callback("📖 Программа", "show_program")],
-      ]);
-      await ctx.sendPhoto(data.images.start_welcome, {
-        caption: text,
-        parse_mode: "HTML",
-        ...keyboard,
-      });
-    });
-
+    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+    
     // --- ШАГ 1: ВЫБОР ЛОКАЦИИ ---
     bot.action("funnel_gift", async (ctx) => {
       await ctx.answerCbQuery();
@@ -99,9 +82,9 @@ const funnel = {
       const data = funnel.getData();
       const loc = data.content.locations[ctx.match[1]];
 
-      const text = `<b>Выбрана локация: ${loc.name}</b>\n\nЭтот образ ${loc.desc}\n\n✨ <b>Кто ждет тебя там?</b> Выбери своего Хранителя:`;
+      const text = `<b>Выбрана локация: ${loc.name}</b>\n\nЭто образ ${loc.desc}\n\n✨ <b>Кто ждет тебя там?</b> Выбери своего Хранителя:`;
       const keyboard = Markup.inlineKeyboard([
-        [Markup.button.callback("👴 Мудрый/ая наставник/ца", "guide_old")],
+        [Markup.button.callback("👴 Мудрый(ая) наставник(ца)", "guide_old")],
         [Markup.button.callback("🐆 Тотемное Животное", "guide_animal")],
         [Markup.button.callback("✨ Сияющий Свет", "guide_light")],
       ]);
@@ -112,14 +95,17 @@ const funnel = {
       });
     });
     bot.action(/^guide_(.+)$/, async (ctx) => {
+        try {
       await ctx.answerCbQuery();
       const data = funnel.getData();
 
       // Сразу подтверждаем выбор коротким текстом
       await ctx.reply("✨ Твой Хранитель услышал твой зов...");
 
+      await delay(3000);
+
       // Через 3 секунды присылаем глубокое напутствие с кнопкой
-      setTimeout(async () => {
+      
         const wisdomText = `✨ <b>Подробно представь своего Хранителя...</b>\n\nНаполни его мудростью и силой. Представь, что он делится с тобой этой энергией, и ты становишься лучшей версией себя. Это состояние — твой компас в Путешествии.`;
         
         const keyboard = Markup.inlineKeyboard([
@@ -130,7 +116,9 @@ const funnel = {
           parse_mode: "HTML",
           ...keyboard,
         });
-      }, 3000);
+      } catch (e) {
+    console.error("Ошибка в шаге Guide:", e);
+  }
     });
 
     // --- ШАГ 3: ТЕНЬ (ПРЕГРАДА) ---
@@ -173,7 +161,7 @@ const funnel = {
           await ctx.reply(text, { parse_mode: "HTML", ...keyboard }).catch(() => {});
         }, 5000); 
 
-      }, 3000);
+      }, 5000);
     });
 
     // --- ШАГ 4.1: СКАЧИВАНИЕ + МОСТИК (ПАУЗА 7 СЕК) ---
@@ -187,7 +175,7 @@ const funnel = {
       );
 
       setTimeout(async () => {
-        const text = `🧘 <b>Твой Хранитель уже у последних врат...</b>\nЭто была лишь одна глава. Готов(а) открыть врата и узнать условия Путешествия?`;
+        const text = `🧘 <b>Твой Хранитель всегда с тобой...</b>\n Готов(а) открыть врата и узнать условия Путешествия?`;
         const keyboard = Markup.inlineKeyboard([
           [Markup.button.callback("🚀 Открыть врата", "show_offer")],
         ]);
@@ -207,10 +195,12 @@ const funnel = {
 
       // Ищем цену для зачеркивания в массиве list
       const fullPrice = p.list.find((item) => item.id === "full")?.price || "";
+          // 2. Ищем спеццену  в массиве list
+    const specialPrice = p.list.find((item) => item.id === "special")?.price || "";
 
-      const text =
-        `🗺 <b>Курс-путешествие "Архитектор своего сценария"</b>\n\n` +
-        `🏆 <b>Спеццена: ${p.special}</b> (вместо ${fullPrice})\n` +
+    const text =
+        `🗺 <b>Курс-путешествие "Архитектор своей Истории"</b>\n\n` +
+        `🏆 <b>Спеццена: ${specialPrice}</b> (вместо ${fullPrice}) - действительна в течении суток\n` +
         `⏳ Забронируй место всего за <b>${p.reserve}</b>!`;
 
       // Вызываем метод из keyboards.js
@@ -266,7 +256,7 @@ const funnel = {
     bot.action("contact_admin", async (ctx) => {
       await ctx.answerCbQuery();
       const data = funnel.getData();
-      await ctx.reply(`По всем вопросам пиши мастеру: @${data.admin_username}`);
+      await ctx.reply(`По всем вопросам пиши сюда ${data.admin_username}`);
     });
   },
 };

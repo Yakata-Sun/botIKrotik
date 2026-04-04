@@ -6,7 +6,7 @@
  */
 require('dns').setDefaultResultOrder('ipv4first');
 require('dotenv').config();
-const { Telegraf } = require("telegraf");
+const { Telegraf, Markup  } = require("telegraf");
 
 // Подключение внутренних модулей
 const config = require('./modules/config');
@@ -39,12 +39,18 @@ let userHistory = storage.load(config.HISTORY_FILE);
 
 // Регистрация глобальных команд (/start, /help и др.)
 registerCommands(bot, userSettings, userHistory);
-
+// 3. РЕГИСТРАЦИЯ ВОРОНКИ И КНОПОК (Один раз при запуске!)
+funnel.init(bot); 
+registerActions(bot, { userSettings, astro, funnel, storage, menus, config });
 /**
  * Основной слушатель всех входящих сообщений
  */
 bot.on('message', async (ctx) => {
+    console.log(`📩 Получено сообщение от ${ctx.from.id}: ${ctx.message.text}`);
     if (!ctx.message) return;
+
+    if (ctx.message.text && ctx.message.text.startsWith('/')) return;// ПЕРВЫМ ДЕЛОМ: Игнорируем команды, чтобы они ушли в registerCommands
+
         const userId = ctx.from.id;
     const text = ctx.message.text;
 
@@ -81,8 +87,8 @@ bot.on('message', async (ctx) => {
 
      // ---  ПРОВЕРКА ВОРОНКИ СКАЗКИ ---
     // Если пользователь на этапе ввода животного, funnel.handleText вернет true и прервет дальнейший код
-    const isFunnelStep = await funnel.init(bot);
-    if (isFunnelStep) return; 
+ /*    const isFunnelStep = await funnel.handleText(ctx); 
+    if (isFunnelStep) return;  */
 
     // --- 4. АСТРО-ЧЕКАП (Геймификация для всех) ---
     if (userSettings[userId].isAstroCheck) {
@@ -112,16 +118,6 @@ bot.on('message', async (ctx) => {
         await ctx.reply("✨ Чтобы пообщаться со звездами и получить разбор, выберите <b>🔮 Астро-чекап</b> в меню услуг.", { parse_mode: 'HTML' });
     }
 });
-// РЕГИСТРАЦИЯ ВСЕХ ACTIONS (Кнопок)
-// Просто вызываем функцию и передаем туда всё необходимое
-registerActions(bot, { 
-    userSettings, 
-    astro, 
-    funnel, 
-    storage,
-    menus, // если кнопки будут вызывать меню
-    config 
-});
 /**
  * Запуск бота и вывод уведомления в консоль
  */
@@ -136,5 +132,9 @@ bot.launch()
     });
 
 // Мягкая остановка при завершении процесса
-process.once('SIGINT', () => bot.stop('SIGINT'));
+process.once('SIGINT', () => {
+  if (bot.botInfo) { // Проверка, что бот был инициализирован
+    bot.stop('SIGINT');
+  }
+});
 process.once('SIGTERM', () => bot.stop('SIGTERM'));

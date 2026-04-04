@@ -4,8 +4,8 @@
   "pdf_id": "BQACAgIAAxkBAAIIu2nI3iBJuinuP8nvJdYLBIOZzYnMAAIckwACKNVJSslC_Iai21H-OgQ",
   "images": {
     "start_welcome": "AgACAgIAAxkBAAII_2nJF6Ms11DJr8RpA5pSJ13AOgscAALzEWsby7XhSx-4x1mtVeGyAQADAgADeQADOgQ",
-    "all_loc_sheet": "AgACAgIAAxkBAAIJIWnKNU0U-EdzViCv_teyJ7lTQKyyAAJgFmsbz6RQSgABxtsOoNyAbAEAAwIAA3kAAzoE",
-    "all_shd_sheet": "AgACAgIAAxkBAAIJI2nKNsQTH5Txvpm5JwYAARLju-6p3wACbRZrG8-kUEpsNti69HiLGAEAAwIAA3kAAzoE",
+    "all_loc_sheet": "AgACAgIAAxkBAAIJemnK1AzV0vHiWWJWlMA-R13u1xvcAAIjG2sbz6RQSvvbisLD0VxJAQADAgADeQADOgQ",
+    "all_shd_sheet": "AgACAgIAAxkBAAIJ52nOZWFdR_yBUxJAF1qFzJeBpwjtAAJ3FWsbFK15SnLshZ0wwJmYAQADAgADeQADOgQ",
     "reminder": "AgACAgIAAxkBAAIJJWnKP_NMVt0C1dMnEr5dJ6Hga7vSAAK9Fmsbz6RQSn50W1BdOn3uAQADAgADeQADOgQ",
     "offer_main": "AgACAgIAAxkBAAIJGWnKJwABE0ayJmETHb6V5ujgFBc_TwACCxZrG8-kUErchDdl4kVnagEAAwIAA3kAAzoE",
     "loc_cards": {
@@ -50,7 +50,7 @@
       "3": { "title": "Боязнь успеха", "trauma": "успех — это непосильная ноша, ведущий к выгоранию" },
       "4": { "title": "Тень критика", "trauma": "внутренний голос, который обесценивает каждый твой шаг" },
       "5": { "title": "Отчаяние", "trauma": "потерянность, разочарование, самобичевание" },
-      "6": { "title": "Груз прошлого", "trauma": "багаж старых обид и ошибок, которые не дают взлететь" },
+      "6": { "title": "Бессмысленность", "trauma": "Движение, которое не имеет смысла" },
       "7": { "title": "Бесконечная дорога нетуда", "trauma": "потеря контакта со своими истинными желаниями ради других" },
       "8": { "title": "Стена страха", "trauma": "иллюзия непреодолимых преград" },
       "9": { "title": "Невидимые нити", "trauma": "ощущение, что ты не управляешь своей жизнью" }
@@ -61,7 +61,7 @@
     { "id": "impulse", "name": "«Разовый импульс»", "price": "2 500 ₽", "desc": "оплата за каждую сессию отдельно. Подходит, чтобы попробовать метод." },
     { "id": "chat", "name": "«Бережное сопровождение»", "price": "8 500 ₽", "desc": "формат чата после одной онлайн-сессии (до 2-х месяцев)." },
     { "id": "full", "name": "«Полный маршрут»", "price": "11 000 ₽", "desc": "весь курс (пакетом). Самый эффективный формат." },
-    { "id": "special", "name": "Спецпредложение", "price": "6 500 ₽", "desc": "для тех, кто уже проходил сессию «Карта Пути» или прошел здесь эту мини-практику." }
+    { "id": "special", "name": "Спецпредложение", "price": "6 500 ₽", "desc": "в течении суток после того, как вы прошли эту мини-практику" }
   ],
   "reserve": "1 000 ₽",
   "pay_url": "https://pay.ru"

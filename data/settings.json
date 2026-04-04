@@ -18,7 +18,7 @@
     "selectedModel": "deepseek/deepseek-chat",
     "mode": "short",
     "waitingForAuthor": false,
-    "isAstroCheck": false,
+    "isAstroCheck": true,
     "isBroadcasting": false,
     "useSearch": true,
     "waitingForBroadcastPhoto": false,
@@ -37,7 +37,7 @@
       },
       "isTimeExact": true
     },
-    "lastBirthDate": "26.08.1983 12:25",
-    "lastAstroGoal": "Ищу свое предназначение"
+    "lastBirthDate": "26.08.1983 12:00",
+    "lastAstroGoal": "У меня нет ресурсов и сил"
   }
 }

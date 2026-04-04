@@ -23,7 +23,7 @@ module.exports = {
     pricesMenu: (payUrl) => {
         return Markup.inlineKeyboard([
             [Markup.button.url('🔥 Забронировать место', payUrl)],
-            [Markup.button.callback('⬅️ Вернуться к офферу', 'show_offer')]
+            [Markup.button.callback('⬅️ Вернуться', 'show_offer')]
         ]);
     },
     /**
