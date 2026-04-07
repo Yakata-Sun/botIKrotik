@@ -11,7 +11,7 @@ module.exports = {
      * Главное меню (Home Screen)
      * Задача: Максимально быстро вовлечь в бесплатный полезный продукт (Чекап).
      */
-    main: (isAdmin = false) => {
+    main: (isAdmin = false, userCount = 0) => {
         let keyboard = [
             [{ text: '🔮 Узнать свой Путь (Чекап)' }], // Самая большая кнопка-магнит
             [{ text: '🎭 Мои Услуги' }, { text: '✍️ Задать вопрос' }],
@@ -19,7 +19,7 @@ module.exports = {
         ];
 
         if (isAdmin) {
-            keyboard.push([{ text: '⚙️ Админ-панель' }]);
+            keyboard.push([{ text: `⚙️ Админ-панель (${userCount})` }]);
         }
 
         return {
@@ -79,7 +79,7 @@ module.exports = {
     adminPanel: (userCount = 0) => ({
         reply_markup: {
             keyboard: [
-                [{ text: `📢 Рассылка (${userCount} чел.)` }],
+                [{ text: '📢 Рассылка' }],
                 [{ text: '🤖 Настройки ИИ' }],
                 [{ text: '⬅️ В главное меню' }]
             ],

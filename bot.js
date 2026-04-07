@@ -35,7 +35,8 @@ let userSettings = storage.load(config.SETTINGS_FILE);
  * @type {Object} База данных истории диалогов
  * Ключ — ID пользователя, значение — массив сообщений {role, content, timestamp}.
  */
-let userHistory = storage.load(config.HISTORY_FILE);
+let userHistory = storage.load(config.HISTORY_FILE) || {};
+if (Array.isArray(userHistory)) userHistory = {}; 
 
 // Регистрация глобальных команд (/start, /help и др.)
 registerCommands(bot, userSettings, userHistory);
@@ -46,49 +47,60 @@ registerActions(bot, { userSettings, astro, funnel, storage, menus, config });
  * Основной слушатель всех входящих сообщений
  */
 bot.on('message', async (ctx) => {
-    console.log(`📩 Получено сообщение от ${ctx.from.id}: ${ctx.message.text}`);
-    if (!ctx.message) return;
+console.log(`📩 Получено сообщение от ${ctx.from.id}: ${ctx.message.text || 'не текст'}`);
+if (!ctx.message) return;
 
-    if (ctx.message.text && ctx.message.text.startsWith('/')) return;// ПЕРВЫМ ДЕЛОМ: Игнорируем команды, чтобы они ушли в registerCommands
+if (ctx.message.text && ctx.message.text.startsWith('/')) return; // ПЕРВЫМ ДЕЛОМ: Игнорируем команды, чтобы они ушли в registerCommands
 
-        const userId = ctx.from.id;
-    const text = ctx.message.text;
+const userId = String(ctx.from.id);
+const text = ctx.message.text;
 
-            // 1. Если пользователя нет в истории - ДОБАВЛЯЕМ И СОХРАНЯЕМ СРАЗУ
-    if (!userHistory[userId]) {
-        userHistory[userId] = []; // Создаем пустую ячейку
-        // ВЫЗЫВАЕМ STORAGE.SAVE
-        storage.save(config.HISTORY_FILE, userHistory); 
-        console.log(`✅ ID ${userId} зафиксирован в базе истории.`);
-    }
+// --- ПОЛНАЯ ИНИЦИАЛИЗАЦИЯ (Всегда первая) ---
+let changed = false;
 
-    // 1. ОТСЛЕЖИВАНИЕ ID ФАЙЛОВ ДЛЯ АДМИНА
+if (!userHistory[userId]) {
+    userHistory[userId] = [];
+    changed = true;
+}
+
+if (!userSettings[userId]) {
+    userSettings[userId] = { 
+        selectedModel: config.DEFAULT_MODEL, 
+        mode: 'short',
+        isAstroCheck: false
+    };
+    changed = true;
+}
+
+// Сохраняем один раз, если что-то добавили
+if (changed) {
+    storage.save(config.HISTORY_FILE, userHistory);
+    storage.save(config.SETTINGS_FILE, userSettings);
+    console.log(`✅ Данные пользователя ${userId} подготовлены.`);
+}
+
+// --- 2. ЛОГИКА АДМИН-РАССЫЛКИ ---
+const isBroadcastActive = await handleBroadcast(ctx, userSettings, menus, startBroadcast, userHistory, bot);
+if (isBroadcastActive) return;
+
+// --- ПРОВЕРКА РЕЖИМА РАССЫЛКИ ---
+const isAdmin = userId === config.ADMIN_ID;
+const isAdminInBroadcastMode = isAdmin && userSettings[userId] && (
+    userSettings[userId].waitingForBroadcastPhoto || 
+    userSettings[userId].waitingForBroadcastText ||
+    userSettings[userId].waitingForConfirm
+);
+
+// Только если НЕ в режиме рассылки - отслеживаем ID файлов
+if (!isAdminInBroadcastMode) {
     const isFileProcessed = await utils.trackFileIds(ctx);
-    if (isFileProcessed) return; 
+    if (isFileProcessed) return;
+}
 
 
+// --- 3. ФИЛЬТРАЦИЯ ТЕКСТА ---
+if (!text) return;
 
-    // --- 1. ИНИЦИАЛИЗАЦИЯ ДАННЫХ ---
-    if (!userSettings[userId]) {
-        userSettings[userId] = { 
-            selectedModel: config.DEFAULT_MODEL, 
-            mode: 'short',
-            isAstroCheck: false
-        };
-        storage.save(config.SETTINGS_FILE, userSettings);
-    }
- 
-    // --- 2. ЛОГИКА АДМИН-РАССЫЛКИ ---
-    const isBroadcastActive = await handleBroadcast(ctx, userSettings, menus, startBroadcast, userHistory);
-    if (isBroadcastActive) return;
-
-    // --- 3. ФИЛЬТРАЦИЯ ТЕКСТА ---
-    if (!text) return;
-
-     // ---  ПРОВЕРКА ВОРОНКИ СКАЗКИ ---
-    // Если пользователь на этапе ввода животного, funnel.handleText вернет true и прервет дальнейший код
- /*    const isFunnelStep = await funnel.handleText(ctx); 
-    if (isFunnelStep) return;  */
 
     // --- 4. АСТРО-ЧЕКАП (Геймификация для всех) ---
     if (userSettings[userId].isAstroCheck) {

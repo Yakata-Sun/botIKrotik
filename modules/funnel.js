@@ -146,22 +146,20 @@ const funnel = {
         parse_mode: "HTML",
       });
 
-      // --- ПАУЗА 1: ГЛУБОКОЕ ПРОЖИВАНИЕ (3 секунды) ---
-      setTimeout(async () => {
+      delay(3000); 
+
         const deepenText = `✨ <b>Вернись в ситуацию</b> и подробно проживи её так, как ты только что придумал(а)... Наблюдай за изменениями в теле.`;
         await ctx.reply(deepenText, { parse_mode: "HTML" }).catch(() => {});
 
-        // --- ПАУЗА 2: ЗАВЕРШЕНИЕ ПРАКТИКИ (через 5 секунд после первой паузы) ---
-        setTimeout(async () => {
+        delay(5000);
+
           const text = `✨ <b>Практика завершена.</b>\nЗабирай PDF-инструкцию с объяснениями «Режиссерская версия», чтобы этот инструмент всегда был с тобой.`;
           const keyboard = Markup.inlineKeyboard([
             [Markup.button.callback("📑 Скачать практику (PDF)", "download_practice")],
             [Markup.button.callback("🚀 Идти к финалу", "show_offer")],
           ]);
           await ctx.reply(text, { parse_mode: "HTML", ...keyboard }).catch(() => {});
-        }, 5000); 
 
-      }, 5000);
     });
 
     // --- ШАГ 4.1: СКАЧИВАНИЕ + МОСТИК (ПАУЗА 7 СЕК) ---
@@ -174,7 +172,7 @@ const funnel = {
         "Твой личный свиток трансформации. ✨",
       );
 
-      setTimeout(async () => {
+delay(7000);
         const text = `🧘 <b>Твой Хранитель всегда с тобой...</b>\n Готов(а) открыть врата и узнать условия Путешествия?`;
         const keyboard = Markup.inlineKeyboard([
           [Markup.button.callback("🚀 Открыть врата", "show_offer")],
@@ -184,7 +182,6 @@ const funnel = {
           parse_mode: "HTML",
           ...keyboard,
         });
-      }, 7000);
     });
 
     // --- ШАГ 5: ОФФЕР ---

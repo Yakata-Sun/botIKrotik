@@ -17,6 +17,11 @@ module.exports = (bot, userSettings, userHistory) => {
         const userId = ctx.from.id;
         const isAdmin = String(userId) === String(config.ADMIN_ID);
 
+         if (!userHistory[userId]) {
+        userHistory[userId] = []; // Добавляем в историю ПЕРЕД подсчетом
+        storage.save(config.HISTORY_FILE, userHistory);
+    }
+
         // 1. Инициализация настроек
         if (!userSettings[userId]) {
             userSettings[userId] = { 
@@ -36,13 +41,13 @@ module.exports = (bot, userSettings, userHistory) => {
         storage.save(config.SETTINGS_FILE, userSettings);
 
         // 3. Подсчет пользователей (из переданного userHistory)
-        const count = Object.keys(userHistory || {}).length;
+        const userCount = storage.getUserCount();
 
         const welcomeText = 'Доброго времени! Я умный помощник И-Кротик. ✨\n\n' +
-            'Здесь можно увидеть услуги по коучингу (экспресс-сессия, курс-путешествие, астро-чекап) и разработке (создание чат-ботов и веб-разработка) от Марии.\n\n' + 'В недрах этого бота можно найти в подарок интересные гайды и тренинги, а иногда Мария публикует здесь новые или делиться инсайтами';
+            'Здесь вы найдете инструменты для того, чтобы раскрыть свои внутренние смыслы и двигаться к своей мечте. \n\n' + 'Также в недрах этого бота есть подарки и интересные приключения, дерзайте!';
 
         // Передаем isAdmin и count в меню
-        return await ctx.reply(welcomeText, menus.main(isAdmin, count));
+        return await ctx.reply(welcomeText, menus.main(isAdmin, userCount));
     });
 
     /**

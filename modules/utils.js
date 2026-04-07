@@ -18,8 +18,13 @@ function extractUrl(text) {
 
 /**
  * Отслеживает и выводит в чат File ID медиафайлов для администратора.
+ * @param {Object} ctx - Контекст Telegraf
+ * @param {boolean} shouldSkip - Флаг, указывающий нужно ли пропустить трассировку
  */
-async function trackFileIds(ctx) {
+async function trackFileIds(ctx, shouldSkip = false) {
+    // Если указано пропустить - выходим
+    if (shouldSkip) return false;
+    
     const userId = ctx.from?.id;
     if (userId !== config.ADMIN_ID) return false;
 
@@ -37,7 +42,6 @@ async function trackFileIds(ctx) {
     }
     return false;
 }
-
 /**
  * Универсальная отправка PDF-документа.
  * Поддерживает как Telegram File ID, так и локальные пути.

@@ -104,7 +104,7 @@ const astro = {
             parse_mode: "HTML",
             reply_markup: {
                 inline_keyboard: [
-                    [{ text: "🚀 Создать Карту Пути", callback_data: "fast_coaching_start" }],
+                    [{ text: "🚀 Создать Карту Пути", callback_data: "map-kouch" }],
                     [{ text: "✉️ Написать Марии", url: "https://t.me/sherab_wangmo" }]
                 ]
             }

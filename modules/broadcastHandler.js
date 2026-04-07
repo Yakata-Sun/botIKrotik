@@ -19,7 +19,7 @@ const storage = require('./storage');
  * @param {Function} startBroadcast - Функция запуска фактической рассылки.
  * @returns {Promise<boolean>} - true, если сообщение перехвачено рассылкой; false, если идти дальше (в ИИ).
  */
-async function handleBroadcast(ctx, userSettings, menus, startBroadcast, userHistory) { 
+async function handleBroadcast(ctx, userSettings, menus, startBroadcast, userHistory, bot) { 
     const userId = ctx.from.id;
     const admin = userSettings[userId];
     
@@ -46,52 +46,55 @@ async function handleBroadcast(ctx, userSettings, menus, startBroadcast, userHis
         await ctx.reply(msg, menus.adminPanel(count));
     };
 
-    // --- ШАГ 1: ПРИЕМ МЕДИА-КОНТЕНТА (Фото, PDF или просто текст) ---
-    if (admin?.waitingForBroadcastPhoto) {
-        // Кнопка отмены
-        if (text === '❌ Отмена') {
-            resetAdminState();
-            await ctx.reply('Рассылка отменена.', menus.main());
-            return true;
-        }
-
-        // А) Если админ прислал ФОТО
-        if (photo) {
-            admin.broadcastPhotoId = photo[photo.length - 1].file_id; // Берем лучшее качество
-            admin.broadcastFileId = null;
-            admin.waitingForBroadcastPhoto = false;
-            admin.waitingForBroadcastText = true;
-            await ctx.reply('📸 Фото принято. Теперь пришлите текст описания:');
-            return true;
-        }
-
-        // Б) Если админ прислал ДОКУМЕНТ (PDF и др.)
-        if (document) {
-            admin.broadcastFileId = document.file_id;
-            admin.broadcastPhotoId = null;
-            admin.waitingForBroadcastPhoto = false;
-            admin.waitingForBroadcastText = true;
-            await ctx.reply('📄 Файл принят. Теперь пришлите текст описания:');
-            return true;
-        }
-
-        // В) Если админ прислал ТЕКСТ (значит рассылка будет без вложений)
-        if (text) {
-            admin.broadcastDraftText = text;
-            admin.waitingForConfirm = true;
-            admin.waitingForBroadcastPhoto = false;
-            
-            // Ищем ссылку для предпросмотра кнопки
-            const url = extractUrl(text);
-            const extra = url ? Markup.inlineKeyboard([[Markup.button.url('🔗 Открыть ссылку', url)]]) : null;
-
-            await ctx.reply(`Предпросмотр сообщения (без медиа):\n\n${text}`, {
-                ...extra,
-                ...menus.confirmBroadcast()
-            });
-            return true;
-        }
+// --- ШАГ 1: ПРИЕМ МЕДИА-КОНТЕНТА (Фото, PDF или просто текст) ---
+if (admin?.waitingForBroadcastPhoto) {
+    // Кнопка отмены
+    if (text === '❌ Отмена') {
+        await resetAdminState();
+        await ctx.reply('Рассылка отменена.', menus.main());
+        return true;
     }
+
+    // А) Если админ прислал ФОТО
+    if (photo) {
+        admin.broadcastPhotoId = photo[photo.length - 1].file_id; // Берем лучшее качество
+        admin.broadcastFileId = null;
+        admin.waitingForBroadcastPhoto = false;
+        admin.waitingForBroadcastText = true;
+        storage.save(config.SETTINGS_FILE, userSettings);
+        await ctx.reply('📸 Фото принято. Теперь пришлите текст описания:');
+        return true; // ВАЖНО: возвращаем true, чтобы остановить дальнейшую обработку
+    }
+
+    // Б) Если админ прислал ДОКУМЕНТ (PDF и др.)
+    if (document) {
+        admin.broadcastFileId = document.file_id;
+        admin.broadcastPhotoId = null;
+        admin.waitingForBroadcastPhoto = false;
+        admin.waitingForBroadcastText = true;
+        storage.save(config.SETTINGS_FILE, userSettings);
+        await ctx.reply('📄 Файл принят. Теперь пришлите текст описания:');
+        return true; // ВАЖНО: возвращаем true, чтобы остановить дальнейшую обработку
+    }
+
+    // В) Если админ прислал ТЕКСТ (значит рассылка будет без вложений)
+    if (text) {
+        admin.broadcastDraftText = text;
+        admin.waitingForConfirm = true;
+        admin.waitingForBroadcastPhoto = false;
+        
+        // Ищем ссылку для предпросмотра кнопки
+        const url = extractUrl(text);
+        const extra = url ? Markup.inlineKeyboard([[Markup.button.url('🔗 Открыть ссылку', url)]]) : null;
+
+        await ctx.reply(`Предпросмотр сообщения (без медиа):\n\n${text}`, {
+            ...extra,
+            ...menus.confirmBroadcast()
+        });
+        storage.save(config.SETTINGS_FILE, userSettings);
+        return true;
+    }
+}
 
     // --- ШАГ 2: ПРИЕМ ТЕКСТА ОПИСАНИЯ (после загрузки медиа) ---
     if (admin?.waitingForBroadcastText && text) {
@@ -141,8 +144,9 @@ async function handleBroadcast(ctx, userSettings, menus, startBroadcast, userHis
             // Очищаем стейт ПЕРЕД запуском, чтобы не зациклить админа при ошибках
             resetAdminState("🚀 Рассылка запущена!"); // Очищаем стейт
             
-            // Передаем управление в основной модуль рассылки (цикл по всем юзерам)
-            await startBroadcast(ctx, userHistory, menus, content);
+           // Передаем управление в основной модуль рассылки (цикл по всем юзерам)
+const result = await startBroadcast(bot, content);
+await ctx.reply(`✅ Рассылка завершена!\nДоставлено: ${result.success}\nОшибок: ${result.failed}`, menus.main(true, result.total));
             return true;
         }
 

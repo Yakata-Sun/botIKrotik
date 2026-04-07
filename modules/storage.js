@@ -7,6 +7,49 @@ const config = require('./config');
  */
 const storage = {
     /**
+ * Получает количество уникальных пользователей
+ * @returns {number} Количество пользователей
+ */
+getUserCount() {
+    try {
+        // Проверяем settings.json - там хранятся профили пользователей
+        if (fs.existsSync(config.SETTINGS_FILE)) {
+            const settings = JSON.parse(fs.readFileSync(config.SETTINGS_FILE, 'utf8'));
+            if (typeof settings === 'object' && settings !== null) {
+                return Object.keys(settings).length;
+            }
+        }
+        
+        // Альтернативно, можно проверить history.json
+        if (fs.existsSync(config.HISTORY_FILE)) {
+            const history = JSON.parse(fs.readFileSync(config.HISTORY_FILE, 'utf8'));
+            if (typeof history === 'object' && history !== null) {
+                return Object.keys(history).length;
+            }
+        }
+        
+        return 0;
+    } catch (e) {
+        console.error('Ошибка при подсчете пользователей:', e);
+        return 0;
+    }
+},
+/**
+ * Получает список всех пользователей с их данными
+ * @returns {Object} Объект с данными пользователей
+ */
+getAllUsers() {
+    try {
+        if (fs.existsSync(config.SETTINGS_FILE)) {
+            return JSON.parse(fs.readFileSync(config.SETTINGS_FILE, 'utf8'));
+        }
+        return {};
+    } catch (e) {
+        console.error('Ошибка при получении списка пользователей:', e);
+        return {};
+    }
+},
+    /**
      * Загружает данные из JSON-файла.
      * @param {string} file - Путь к файлу базы данных.
      * @returns {Object|Array} Спарсенные данные или пустой объект при ошибке/отсутствии файла.

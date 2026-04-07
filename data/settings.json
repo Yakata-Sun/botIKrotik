@@ -1,43 +1,10 @@
 {
-  "128236897": {
-    "selectedModel": "deepseek/deepseek-chat",
-    "mode": "short"
-  },
-  "276798698": {
+  "1893912621": {
     "selectedModel": "cognitivecomputations/dolphin-mistral-24b-venice-edition:free",
     "mode": "short",
-    "isAstroCheck": false
-  },
-  "1567478547": {
-    "selectedModel": "deepseek/deepseek-chat",
-    "mode": "short",
     "isAstroCheck": false,
-    "waitingForAuthor": false
-  },
-  "1893912621": {
-    "selectedModel": "deepseek/deepseek-chat",
-    "mode": "short",
-    "waitingForAuthor": false,
-    "isAstroCheck": true,
-    "isBroadcasting": false,
-    "useSearch": true,
     "waitingForBroadcastPhoto": false,
     "waitingForBroadcastText": false,
-    "waitingForConfirm": false,
-    "broadcastDraftText": null,
-    "broadcastPhotoId": null,
-    "broadcastFileId": null,
-    "tempBazi": {
-      "master": "Огонь Ян (Бин)",
-      "pillars": {
-        "year": "Вода Инь (Гуй) на Свинья (Вода)",
-        "month": "Металл Ян (Гэн) на Обезьяна (Металл)",
-        "day": "Огонь Ян (Бин) на Собака (Земля)",
-        "hour": "Дерево Ян (Цзя) на Лошадь (Огонь)"
-      },
-      "isTimeExact": true
-    },
-    "lastBirthDate": "26.08.1983 12:00",
-    "lastAstroGoal": "У меня нет ресурсов и сил"
+    "waitingForConfirm": false
   }
 }

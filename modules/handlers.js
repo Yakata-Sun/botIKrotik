@@ -20,7 +20,8 @@ module.exports = async (ctx, userSettings, userHistory) => {
   const userId = ctx.from.id;
   const settings = userSettings[userId];
     const isAdmin = String(userId) === String(config.ADMIN_ID);
-     let count = Object.keys(userHistory).length; // Считаем ID в базе
+     const userCount = storage.getUserCount(); // Считаем ID в базе
+     console.log(` Всего пользователей: ${storage.getUserCount()}`);
 
   // Если настроек нет (защита от ошибок), выходим
   if (!settings) return false;
@@ -31,6 +32,12 @@ module.exports = async (ctx, userSettings, userHistory) => {
       settings.isAstroCheck = false;
   }
 
+  // В начале handlers.js проверь, не начинается ли текст с названия кнопки
+if (text.startsWith('⚙️ Админ-панель')) {
+    if (!isAdmin) return false;
+    return await ctx.reply("Панель управления:", menus.adminPanel(userCount));
+}
+
   switch (text) {
     // --- ГЛАВНАЯ НАВИГАЦИЯ ---
     case "⬅️ Назад":
@@ -40,7 +47,7 @@ module.exports = async (ctx, userSettings, userHistory) => {
       settings.waitingForBroadcastText = false;
       settings.waitingForConfirm = false;
       storage.save(config.SETTINGS_FILE, userSettings);
-      return await ctx.reply("Выберите раздел:", menus.main(isAdmin));
+      return await ctx.reply("Выберите раздел:", menus.main(isAdmin, userCount));
 
     case "🔮 Узнать свой Путь (Чекап)":
     case "🔮 Повторить Чекап":
@@ -70,10 +77,10 @@ module.exports = async (ctx, userSettings, userHistory) => {
       );
 
     // --- АДМИН-ПАНЕЛЬ ---
-    case "⚙️ Админ-панель":
+
     case "⬅️ Назад в админку":
         if (!isAdmin) return false;
-        return await ctx.reply("Панель управления:", menus.adminPanel(count));
+        return await ctx.reply("Панель управления:", menus.adminPanel(userCount));
 
     case "❌ Отмена":
         if (!isAdmin) return false;
@@ -81,7 +88,7 @@ module.exports = async (ctx, userSettings, userHistory) => {
         settings.waitingForBroadcastText = false;
         settings.waitingForConfirm = false;
         storage.save(config.SETTINGS_FILE, userSettings);
-        return await ctx.reply("Отменено.", menus.adminPanel(count));
+        return await ctx.reply("Отменено.", menus.adminPanel(userCount));
 
     case "📢 Рассылка":
         if (!isAdmin) return false;

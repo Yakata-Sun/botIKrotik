@@ -4,17 +4,18 @@ const { Markup } = require('telegraf');
 
 /**
  * Модуль массовой рассылки контента.
- * @param {Object} ctx - Контекст Telegraf.
- * @param {Object} userHistory - Все пользователи из БД.
- * @param {Object} menus - Модуль клавиатур.
+ * @param {Object} bot - Экземпляр Telegraf бота.
  * @param {Object} content - Объект { text, photo, file, url }.
  */
-async function startBroadcast(ctx, userHistory, menus, content) {
-    const allIds = Object.keys(userHistory);
+async function startBroadcast(bot, content) {
+    const allUsers = storage.getAllUsers(); 
+    const allIds = Object.keys(allUsers);
+    console.log(`Пользователи для рассылки:`, allIds);
+
     let success = 0;
     let failed = 0;
 
-    await ctx.reply(`📢 Запуск рассылки на ${allIds.length} чел...`, menus.main());
+    console.log(`📢 Запуск рассылки на ${allIds.length} пользователей...`);
 
     // Подготовка инлайн-кнопки (если есть ссылка)
     const extra = {};
@@ -31,17 +32,17 @@ async function startBroadcast(ctx, userHistory, menus, content) {
     for (const id of allIds) {
         try {
             if (content.photo) {
-                await ctx.telegram.sendPhoto(id, content.photo, { 
+                await bot.telegram.sendPhoto(id, content.photo, { 
                     caption: content.text || "", 
                     ...extra 
                 });
             } else if (content.file) {
-                await ctx.telegram.sendDocument(id, content.file, { 
+                await bot.telegram.sendDocument(id, content.file, { 
                     caption: content.text || "", 
                     ...extra 
                 });
             } else {
-                await ctx.telegram.sendMessage(id, content.text || "Сообщение без текста", extra);
+                await bot.telegram.sendMessage(id, content.text || "Сообщение без текста", extra);
             }
             
             success++;
@@ -53,7 +54,7 @@ async function startBroadcast(ctx, userHistory, menus, content) {
         }
     }
 
-    // --- БЕЗОПАСНОЕ ЛОГИРОВАНИЕ ---
+    // --- ЛОГИРОВАНИЕ ---
     let logData = storage.load(config.BROADCAST_LOG);
     
     // Проверка: если лог не массив (null, {} или пустой файл), создаем новый массив
@@ -70,7 +71,10 @@ async function startBroadcast(ctx, userHistory, menus, content) {
 
     storage.save(config.BROADCAST_LOG, logData);
 
-    return ctx.reply(`✅ Рассылка завершена!\nДоставлено: ${success}\nОшибок: ${failed}`, menus.main());
+    console.log(`✅ Рассылка завершена! Доставлено: ${success}, Ошибок: ${failed}`);
+    
+    // Возвращаем результат для возможного использования
+    return { success, failed, total: allIds.length };
 }
 
 module.exports = startBroadcast;
