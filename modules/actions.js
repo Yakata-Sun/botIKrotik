@@ -1,5 +1,6 @@
 const { Markup } = require('telegraf');
 const config = require('./config');
+const { sendMapPathSession } = require('./mapPath');
 
 /**
  * @module Actions
@@ -52,6 +53,22 @@ module.exports = (bot, { userSettings, astro, funnel, storage, config }) => {
     } else {
         await ctx.reply("✨ Спасибо! Ваша заявка получена. Мария свяжется с вами в ближайшее время.");
     }
+});
+// В обработчике map-kouch:
+bot.action('map-kouch', async (ctx) => {
+    const userId = ctx.from.id;
+    const userSettings = require('./storage').load(config.SETTINGS_FILE);
+    
+    await ctx.answerCbQuery();
+    
+    // Сбрасываем режим АстроЧекап
+    if (userSettings[userId]) {
+        userSettings[userId].isAstroCheck = false;
+        require('./storage').save(config.SETTINGS_FILE, userSettings);
+    }
+    
+    // Используем общую функцию
+    await sendMapPathSession(ctx);
 });
 // Начало практики (через 1.5 секунды после нажатия "Да")
 bot.action('start_backpack_practice', async (ctx) => {

@@ -6,6 +6,7 @@ const { Markup } = require('telegraf');
 const storage = require("./storage");
 const config = require("./config");
 const menus = require("./menus");
+const { sendMapPathSession } = require('./mapPath');
 
 /**
  * Маршрутизатор текстовых сообщений.
@@ -146,24 +147,9 @@ if (text.startsWith('⚙️ Админ-панель')) {
       );
 
     case "📈 Карта Пути (Сессия)":
-      settings.isAstroCheck = false;
-      storage.save(config.SETTINGS_FILE, userSettings);
-      return await ctx.reply(
-        `📍 <b>Сессия «Карта Пути»</b> — это точка сборки твоего пути.\n\n` +
-        `Всего за одну глубокую встречу с использованием МАК-карт мы:\n` +
-        `• Разберем твой запрос "по косточкам"\n` +
-        `• Найдем скрытые препятствия, которые не видны изнутри\n` +
-        `• Составим план из 3-х конкретных шагов к твоей цели\n\n` +
-        `Это формат для тех, кто ценит время и хочет получить **ясность за 60 минут**.\n\n` +
-        `Готов составить свою карту?`,
-        { 
-          parse_mode: 'HTML',
-           ...Markup.inlineKeyboard([
-                [Markup.button.callback('🚀  Да, я хочу на сессию!', 'order_map-kouch')],
-                [Markup.button.url('✉️ Обсудить в ЛС', 'https://t.me/sherab_wangmo')]
-            ])
-          }
-           );
+    settings.isAstroCheck = false;
+    storage.save(config.SETTINGS_FILE, userSettings);
+    return await sendMapPathSession(ctx);
 
     case "🔮 Повторить Чекап":
       settings.isAstroCheck = true;

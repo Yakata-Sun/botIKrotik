@@ -5,6 +5,18 @@
     "isAstroCheck": false,
     "waitingForBroadcastPhoto": false,
     "waitingForBroadcastText": false,
-    "waitingForConfirm": false
+    "waitingForConfirm": false,
+    "tempBazi": {
+      "master": "Огонь Ян (Бин)",
+      "pillars": {
+        "year": "Вода Инь (Гуй) на Свинья (Вода)",
+        "month": "Металл Ян (Гэн) на Обезьяна (Металл)",
+        "day": "Огонь Ян (Бин) на Собака (Земля)",
+        "hour": "Дерево Ян (Цзя) на Лошадь (Огонь)"
+      },
+      "isTimeExact": true
+    },
+    "lastBirthDate": "26.08.1983 12:25",
+    "lastAstroGoal": "У меня нет ресурсов и сил"
   }
 }
