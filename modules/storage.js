@@ -105,7 +105,88 @@ getAllUsers() {
                 }
             }
         }
+    },
+    /**
+ * Получает состояние пользователя
+ * @param {number|string} userId - ID пользователя
+ * @returns {Object|null} Состояние пользователя или null
+ */
+getUserState (userId) {
+    try {
+        const settings = this.load(config.SETTINGS_FILE);
+        return settings[userId] || null;
+    } catch (e) {
+        console.error('Ошибка при получении состояния пользователя:', e);
+        return null;
     }
+},
+
+/**
+ * Сохраняет состояние пользователя
+ * @param {number|string} userId - ID пользователя
+ * @param {Object} state - Объект состояния для сохранения
+ */
+saveUserState (userId, state) {
+    try {
+        const settings = this.load(config.SETTINGS_FILE);
+        settings[userId] = { ...settings[userId], ...state };
+        this.save(config.SETTINGS_FILE, settings);
+    } catch (e) {
+        console.error('Ошибка при сохранении состояния пользователя:', e);
+    }
+},
+
+/**
+ * Получает настройки пользователя
+ * @param {number|string} userId - ID пользователя
+ * @returns {Object} Настройки пользователя или пустой объект
+ */
+getUserSettings(userId) {
+    try {
+        const settings = this.load(config.SETTINGS_FILE);
+        return settings[userId] || {};
+    } catch (e) {
+        console.error('Ошибка при получении настроек пользователя:', e);
+        return {};
+    }
+},
+
+/**
+ * Обновляет настройки пользователя
+ * @param {number|string} userId - ID пользователя
+ * @param {Object} updates - Объект с обновлениями настроек
+ */
+updateUserSetting(userId, updates) {
+    try {
+        const settings = this.load(config.SETTINGS_FILE);
+        if (!settings[userId]) {
+            settings[userId] = {};
+        }
+        Object.assign(settings[userId], updates);
+        this.save(config.SETTINGS_FILE, settings);
+    } catch (e) {
+        console.error('Ошибка при обновлении настроек пользователя:', e);
+    }
+},
+
+/**
+ * Сбрасывает флаг ожидания чека для пользователя
+ * @param {number|string} userId - ID пользователя
+ */
+resetAwaitingReceipt(userId) {
+    this.updateUserSetting(userId, { awaitingReceipt: false });
+},
+
+/**
+ * Устанавливает флаг ожидания чека для пользователя
+ * @param {number|string} userId - ID пользователя
+ */
+setAwaitingReceipt(userId) {
+    this.updateUserSetting(userId, { 
+        awaitingReceipt: true,
+        paymentStep: 'waiting_receipt'
+    });
+}
 };
 
 module.exports = storage;

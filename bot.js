@@ -21,6 +21,7 @@ const registerActions = require('./modules/actions');
 const funnel = require('./modules/funnel');
 const utils = require('./modules/utils');
 const astro = require('./modules/astro');
+const receipts = require('./modules/receipts');
 
 /** @type {Telegraf} Экземпляр бота */
 const bot = new Telegraf(config.BOT_TOKEN);
@@ -43,11 +44,48 @@ registerCommands(bot, userSettings, userHistory);
 // 3. РЕГИСТРАЦИЯ ВОРОНКИ И КНОПОК (Один раз при запуске!)
 funnel.init(bot); 
 registerActions(bot, { userSettings, astro, funnel, storage, menus, config });
+
+// === ОБРАБОТЧИКИ ДЛЯ АДМИНСКОЙ УТИЛИТЫ ===
+// Эти обработчики идут ПЕРЕД обработчиками чеков!
+bot.on('photo', async (ctx, next) => {
+  const userId = ctx.from?.id;
+  
+  // Только для админа и только если НЕ ожидается чек
+  if (userId == config.ADMIN_ID) {
+    const settings = storage.getUserSettings(userId);
+    if (settings.awaitingReceipt !== true) { // Явная проверка на false/null/undefined
+      const processed = await utils.trackFileIds(ctx);
+      if (processed) {
+        return; // Останавливаем обработку, ID отправлен
+      }
+    }
+  }
+  return next(); // Передаем дальше к обработчикам чеков
+});
+
+bot.on('document', async (ctx, next) => {
+  const userId = ctx.from?.id;
+  
+  // Только для админа и только если НЕ ожидается чек
+  if (userId == config.ADMIN_ID) {
+    const settings = storage.getUserSettings(userId);
+    if (settings.awaitingReceipt !== true) { // Явная проверка на false/null/undefined
+      const processed = await utils.trackFileIds(ctx);
+      if (processed) {
+        return; // Останавливаем обработку, ID отправлен
+      }
+    } 
+  }
+  return next(); // Передаем дальше к обработчикам чеков
+});
+
+// РЕГИСТРАЦИЯ ОБРАБОТЧИКОВ ЧЕКОВ
+receipts.registerReceiptHandlers(bot);
+
 /**
  * Основной слушатель всех входящих сообщений
  */
 bot.on('message', async (ctx) => {
-console.log(`📩 Получено сообщение от ${ctx.from.id}: ${ctx.message.text || 'не текст'}`);
 if (!ctx.message) return;
 
 if (ctx.message.text && ctx.message.text.startsWith('/')) return; // ПЕРВЫМ ДЕЛОМ: Игнорируем команды, чтобы они ушли в registerCommands
@@ -76,26 +114,16 @@ if (!userSettings[userId]) {
 if (changed) {
     storage.save(config.HISTORY_FILE, userHistory);
     storage.save(config.SETTINGS_FILE, userSettings);
-    console.log(`✅ Данные пользователя ${userId} подготовлены.`);
 }
 
 // --- 2. ЛОГИКА АДМИН-РАССЫЛКИ ---
 const isBroadcastActive = await handleBroadcast(ctx, userSettings, menus, startBroadcast, userHistory, bot);
 if (isBroadcastActive) return;
 
-// --- ПРОВЕРКА РЕЖИМА РАССЫЛКИ ---
-const isAdmin = userId === config.ADMIN_ID;
-const isAdminInBroadcastMode = isAdmin && userSettings[userId] && (
-    userSettings[userId].waitingForBroadcastPhoto || 
-    userSettings[userId].waitingForBroadcastText ||
-    userSettings[userId].waitingForConfirm
-);
 
-// Только если НЕ в режиме рассылки - отслеживаем ID файлов
-if (!isAdminInBroadcastMode) {
-    const isFileProcessed = await utils.trackFileIds(ctx);
-    if (isFileProcessed) return;
-}
+// Только если НЕ в режиме рассылки, но АДМИН - отслеживаем ID файлов
+const isFileProcessed = await utils.trackFileIds(ctx);
+if (isFileProcessed) return;
 
 
 // --- 3. ФИЛЬТРАЦИЯ ТЕКСТА ---
@@ -127,7 +155,7 @@ if (!text) return;
         await handleAIRequest(ctx, userSettings, userHistory, menus);
     } else {
         // Если пишет обычный пользователь (не в режиме чекапа и не кнопка меню)
-        await ctx.reply("✨ Чтобы пообщаться со звездами и получить разбор, выберите <b>🔮 Астро-чекап</b> в меню услуг.", { parse_mode: 'HTML' });
+        await ctx.reply("✨ Если вы хотите написать Марии, перейдите в ЛС https://t.me/sherab_wangmo'", { parse_mode: 'HTML' });
     }
 });
 /**

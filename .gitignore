@@ -1,2 +1,6 @@
 node_modules
 .env
+data/settings.json
+data/history.json
+data/broadcasts.json
+data/questions.json

@@ -1,13 +1,14 @@
 const { Markup } = require('telegraf');
 const config = require('./config');
 const { sendMapPathSession } = require('./mapPath');
+const { updateUserSetting } = require('./storage');
 
 /**
  * @module Actions
  * @description Регистрация всех callback-обработчиков бота
  */
 module.exports = (bot, { userSettings, astro, funnel, storage, config }) => {
-
+    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
     // --- 1. ОБРАБОТКА ЗАЯВОК (ORDER) ---
     bot.action(/^order_(.+)$/, async (ctx) => {
         const serviceType = ctx.match[1];
@@ -25,14 +26,14 @@ module.exports = (bot, { userSettings, astro, funnel, storage, config }) => {
     if (serviceType === 'map-kouch') {
         const checklistId = config.CHECKLIST_FILE_ID; 
 
-        // Небольшая пауза для естественности (опционально)
-        setTimeout(async () => {
+        await delay(3000);
+       
             await ctx.reply(
                 "💪 Отличный выбор! Твоя заявка принята, в ближайшее время Мария выйдет на связь\n\n",
                 { parse_mode: 'HTML' }
             );
 
- setTimeout(async () => {
+ await delay(3000);
             const practiceText = 
                 `А пока могу предложить тебе пройти короткую интерактивную \n\n` +
                 `практику <b>«Разгрузка рюкзака»</b> — она поможет убрать лишний шум и почувствовать легкость еще до начала сессии.\n\n` +
@@ -48,8 +49,6 @@ module.exports = (bot, { userSettings, astro, funnel, storage, config }) => {
                 parse_mode: 'HTML', 
                 ...keyboard 
             });
-        }, 3000); 
-        }, 1000); 
     } else {
         await ctx.reply("✨ Спасибо! Ваша заявка получена. Мария свяжется с вами в ближайшее время.");
     }
@@ -74,8 +73,8 @@ bot.action('map-kouch', async (ctx) => {
 bot.action('start_backpack_practice', async (ctx) => {
     await ctx.answerCbQuery();
     await ctx.editMessageText("⏳ <i>Раскрываю рюкзак...</i>", { parse_mode: 'HTML' });
+delay(1500);
 
-    setTimeout(async () => {
         const text = `🎒 <b>Практика «Разгрузка рюкзака»</b>\n\n` +
             `Представь, что твои дела и тревоги — это тяжелые камни в рюкзаке. ` +
             `Давай выложим первый самый крупный камень. Какое чувство сейчас весит больше всего?`;
@@ -87,7 +86,7 @@ bot.action('start_backpack_practice', async (ctx) => {
         ]);
 
         await ctx.editMessageText(text, { parse_mode: 'HTML', ...keyboard });
-    }, 1500);
+   
 });
 
 // Финал с Компасом (многоступенчатая пауза)
@@ -96,13 +95,12 @@ bot.action('backpack_finish', async (ctx) => {
     
     // Сразу меняем текст
     await ctx.editMessageText("✨ Ты медленно выкладываешь этот камень на обочину...");
-
-    // Через 2.5 секунды — ощущение легкости
-    setTimeout(async () => {
+await delay(1500);
+ 
         await ctx.reply("🧘 <i>В теле появляется первый глоток легкости. Туман в голове начинает рассеиваться...</i>", { parse_mode: 'HTML' });
 
-        // Через еще 3 секунды — финальный подарок (Компас)
-        setTimeout(async () => {
+        await delay(3000);
+
             const finalText = `🏮 <b>Твой путь уже начался.</b>\n\n` +
                 `Чтобы закрепить это состояние до нашей встречи, я дарю тебе <b>Компас Приоритетов</b>. Сохрани его себе.`;
 
@@ -113,9 +111,6 @@ bot.action('backpack_finish', async (ctx) => {
                     [Markup.button.url('✉️ Написать Марии', 'https://t.me/sherab_wangmo')]
                 ])
             });
-        }, 3000);
-
-    }, 2500);
 });
     // --- 2. БА ЦЗЫ: ВЫБОР ЦЕЛИ ---
     bot.action(/^goal_(.+)$/, async (ctx) => {
@@ -132,6 +127,26 @@ bot.action('backpack_finish', async (ctx) => {
         // Вызываем ИИ-анализ из модуля astro
         await astro.processAI(ctx, userSettings, goalMap[goalId]);
     });
+
+    //ожидание чека после кнопки Я оплатила
+    bot.action('i_paid', async (ctx) => {
+  try {
+    const userId = ctx.from.id;
+    
+    // Включаем режим ожидания чека
+    await updateUserSetting(userId, { 
+      awaitingReceipt: true,
+      paymentStep: 'waiting_receipt'
+    });
+
+    await ctx.answerCbQuery();
+    await ctx.reply("📸 Пожалуйста, пришлите скан или фото чека об оплате.\n\n📎 Также можно отправить документ PDF с чеком.");
+    
+  } catch (error) {
+    console.error('Ошибка при обработке кнопки "Я оплатил":', error);
+    await ctx.answerCbQuery('Произошла ошибка, попробуйте позже');
+  }
+});
 
     // --- 4. ИНИЦИАЛИЗАЦИЯ ВОРОНКИ СКАЗКИ ---
     // Передаем зависимости внутрь модуля воронки

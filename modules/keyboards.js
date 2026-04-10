@@ -31,10 +31,11 @@ module.exports = {
      * @param {string} payUrl - Ссылка на оплату
      * @param {string} reserveUrl - Ссылка на бронь
      */
-    offerMenu: (reservePrice, payUrl) => {
+    offerMenu: (reservePrice) => {
         return Markup.inlineKeyboard([
             [Markup.button.callback("💰 Посмотреть все форматы и цены", "show_prices")],
-            [Markup.button.url(`🔥 Забронировать (${reservePrice})`, payUrl)],
+            [Markup.button.callback("💳 Оплатить онлайн", "confirm_payment")],
+            [Markup.button.callback(`🔥 Забронировать (${reservePrice})`, "reserve_price")],
             [Markup.button.callback("✅ Я оплатил(а)", "confirm_payment")],
             [Markup.button.callback("📖 Отзывы", "show_reviews")],
             [Markup.button.callback("💬 Связаться", "contact_admin")]

@@ -3,6 +3,7 @@
  * @description Вспомогательные инструменты для разработки, парсинга, отладки и отправки медиа.
  */
 const config = require('./config');
+const storage = require('./storage');
 const fs = require('fs');
 const schedule = require('node-schedule');
 
@@ -17,31 +18,63 @@ function extractUrl(text) {
 }
 
 /**
- * Отслеживает и выводит в чат File ID медиафайлов для администратора.
- * @param {Object} ctx - Контекст Telegraf
- * @param {boolean} shouldSkip - Флаг, указывающий нужно ли пропустить трассировку
+ * Отслеживает и сохраняет ID медиафайлов (только для админа, вне режима рассылки)
+ * @param {import('telegraf').Context} ctx - Контекст Telegraf
+ * @returns {Promise<boolean>} true если файл был обработан, false если нужно продолжить обычную обработку
  */
-async function trackFileIds(ctx, shouldSkip = false) {
-    // Если указано пропустить - выходим
-    if (shouldSkip) return false;
-    
+async function trackFileIds(ctx) {
     const userId = ctx.from?.id;
-    if (userId !== config.ADMIN_ID) return false;
-
+    
+    // Только для админа
+    if (userId != config.ADMIN_ID) {  // Используем != чтобы избежать проблем с типами
+        return false;
+    }
+    
+    // Проверяем, находится ли админ в режиме рассылки
+    const userSettings = storage.load(config.SETTINGS_FILE);
+    const adminSettings = userSettings[userId] || {};
+    const isAdminInBroadcastMode = adminSettings.waitingForBroadcastPhoto || 
+                                 adminSettings.waitingForBroadcastText ||
+                                 adminSettings.waitingForConfirm;
+    
+    // Если в режиме рассылки - не отслеживаем ID файлов
+    if (isAdminInBroadcastMode) {
+        return false;
+    }
+    
+    // Отслеживаем ID файлов только если НЕ в режиме рассылки
+    // Проверяем все возможные поля для фото
     if (ctx.message?.photo) {
         const fileId = ctx.message.photo[ctx.message.photo.length - 1].file_id;
         await ctx.reply(`🖼 <b>ID Фото:</b>\n<code>${fileId}</code>`, { parse_mode: 'HTML' });
         return true;
     }
-
+    
+    // Проверяем document
     if (ctx.message?.document) {
         const docId = ctx.message.document.file_id;
         const fileName = ctx.message.document.file_name;
         await ctx.reply(`📄 <b>ID Документа (${fileName}):</b>\n<code>${docId}</code>`, { parse_mode: 'HTML' });
         return true;
     }
+    
+    // Проверяем sticker
+    if (ctx.message?.sticker) {
+        const stickerId = ctx.message.sticker.file_id;
+        await ctx.reply(`張貼 <b>ID Стикер:</b>\n<code>${stickerId}</code>`, { parse_mode: 'HTML' });
+        return true;
+    }
+    
+    // Проверяем voice
+    if (ctx.message?.voice) {
+        const voiceId = ctx.message.voice.file_id;
+        await ctx.reply(`🎤 <b>ID Голосовое сообщение:</b>\n<code>${voiceId}</code>`, { parse_mode: 'HTML' });
+        return true;
+    }
+    
     return false;
 }
+
 /**
  * Универсальная отправка PDF-документа.
  * Поддерживает как Telegram File ID, так и локальные пути.
@@ -73,6 +106,7 @@ async function sendPDF(ctx, fileSource, caption) {
         await ctx.reply("🔮 <b>Свиток временно недоступен.</b>\nПопробуй позже или напиши мастеру в личные сообщения.", { parse_mode: 'HTML' });
     }
 }
+
 /**
  * Обрабатывает подтверждение оплаты: отменяет напоминание и уведомляет админа.
  * @param {Object} ctx - Контекст Telegraf.
