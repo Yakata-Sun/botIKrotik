@@ -6,11 +6,11 @@
 const { Markup } = require("telegraf");
 const fs = require("fs");
 const path = require("path");
-const schedule = require("node-schedule");
 const utils = require("./utils");
 const kb = require("./keyboards");
 const payments = require('./payments');
 const storage = require('./storage');
+const { scheduleReminder, stopReminder } = require('./reminders');
 
 const funnel = {
   configPath: path.join(process.cwd(), "data", "funnel_config.json"),
@@ -22,43 +22,6 @@ const funnel = {
     } catch (e) {
       console.error("Ошибка конфига:", e.message);
       return { images: {}, content: {}, prices: {} };
-    }
-  },
-
-  /** Напоминание через 20 часов */
-  scheduleReminder: (ctx) => {
-    const userId = ctx.from.id;
-    const fireDate = new Date(Date.now() + 20 * 60 * 60 * 1000);
-
-    const existingJob = schedule.scheduledJobs[`reminder_${userId}`];
-    if (existingJob) existingJob.cancel();
-
-    schedule.scheduleJob(`reminder_${userId}`, fireDate, async () => {
-      const data = funnel.getData();
-      const text = `🌑 <b>Твой Хранитель ждет у врат...</b>\n\nСпеццена на Путешествие (<b>${data.prices.special}</b>) скоро сгорит. Готов(а) стать Автором своей жизни?`;
-      const keyboard = Markup.inlineKeyboard([
-        [Markup.button.url("🔥 Сохранить спеццену", "https://pay.ru")],
-      ]);
-
-      await ctx.telegram
-        .sendPhoto(userId, data.images.reminder, {
-          caption: text,
-          parse_mode: "HTML",
-          ...keyboard,
-        })
-        .catch(() => {});
-    });
-  },
-
-  /**
-   * Отменяет запланированное напоминание для пользователя.
-   * @param {number|string} userId - ID пользователя Telegram.
-   */
-  stopReminder: (userId) => {
-    const job = schedule.scheduledJobs[`reminder_${userId}`];
-    if (job) {
-      job.cancel();
-      console.log(`[Scheduler] Напоминание для ${userId} отменено.`);
     }
   },
 
@@ -87,7 +50,7 @@ const funnel = {
       const text = `<b>Представь себя в этом месте</b>\n\nЧто ты чувствуешь?\n\nТы хочешь находиться здесь?\n\n✨ <b>Кто-то ждет тебя здесь...</b>Представь Доброго Мудрого Хранителя этого места. Это:`;
       const keyboard = Markup.inlineKeyboard([
         [Markup.button.callback("👴 Мудрый(ая) наставник(ца)", "guide_old")],
-        [Markup.button.callback("🐆 Тотемное Жживотное", "guide_animal")],
+        [Markup.button.callback("🐆 Тотемное Животное", "guide_animal")],
         [Markup.button.callback("✨ Сияющий Свет", "guide_light")],
       ]);
       await ctx.sendPhoto(data.images.loc_cards[loc.id], {
@@ -259,36 +222,57 @@ const funnel = {
       }
     });
 
-    // --- ШАГ 5.1: ДЕТАЛЬНЫЕ ЦЕНЫ ---
-    bot.action("show_prices", async (ctx) => {
-      await ctx.answerCbQuery().catch(() => {});
-      const data = funnel.getData();
-      const p = data.prices;
+// --- ШАГ 5.1: ДЕТАЛЬНЫЕ ЦЕНЫ ---
+bot.action("show_prices", async (ctx) => {
+  await ctx.answerCbQuery().catch(() => {});
+  const data = funnel.getData();
+  const p = data.prices;
 
-      const priceRows = p.list
-        .map((item) => `🔹 <b>${item.name}</b> — <b>${item.price}</b>\n<i>${item.desc}</i>`)
-        .join("\n\n");
+  const priceRows = p.list
+    .map((item) => `🔹 <b>${item.name}</b> — <b>${item.price}</b>\n<i>${item.desc}</i>`)
+    .join("\n\n");
 
-      const fullText =
-        `📜 <b>Стоимость и форматы участия:</b>\n\n${priceRows}\n\n` +
-        `✨ <i>Выбирай свой формат и нажимай кнопку ниже:</i>`;
+  const fullText =
+    `📜 <b>Стоимость и форматы участия:</b>\n\n${priceRows}\n\n` +
+    `✨ <i>Выбирай свой формат и нажимай кнопку ниже:</i>`;
 
-      await ctx.editMessageCaption(fullText, {
-        parse_mode: "HTML",
-        ...kb.pricesMenu(p.pay_url),
-      }).catch(() => {});
+  // Создаем клавиатуру с кнопкой бронирования
+  const keyboard = Markup.inlineKeyboard([
+    [Markup.button.callback(`🔥 Забронировать место (${p.reserve})`, "reserve_price")]
+  ]);
+
+  try {
+    await ctx.editMessageCaption(fullText, {
+      parse_mode: "HTML",
+      ...keyboard
     });
-
+  } catch (editError) {
+    // Если не можем отредактировать, отправляем как новое сообщение
+    try {
+      await ctx.reply(fullText, {
+        parse_mode: "HTML",
+        ...keyboard
+      });
+    } catch (replyError) {
+      console.error("[Funnel] Ошибка отправки цен:", replyError);
+    }
+  }
+});
     // --- ОБРАБОТЧИКИ ОПЛАТЫ ---
     bot.action("reserve_price", async (ctx) => {
       await payments.handleReservePrice(ctx);
+      // Планируем напоминание после резервирования цены
+      await scheduleReminder(ctx);
     });
 
     bot.action("confirm_payment", async (ctx) => {
       await payments.handleFullPayment(ctx);
+      // Отменяем напоминание при полной оплате
+      const userId = ctx.from.id;
+      stopReminder(userId);
     });
 
-    // Новый обработчик для перехода к отправке чека
+    // обработчик для перехода к отправке чека
     bot.action("i_paid", async (ctx) => {
       await ctx.answerCbQuery();
       

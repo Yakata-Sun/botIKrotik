@@ -124,7 +124,7 @@ if (text.startsWith('⚙️ Админ-панель')) {
         storage.save(config.SETTINGS_FILE, userSettings);
         return await ctx.reply("Пришлите контент для рассылки (текст или фото):", menus.confirmBroadcast());
 
-    // --- НАСТРОЙКИ ИИ (АДМИН) ---
+/*     // --- НАСТРОЙКИ ИИ (АДМИН) ---
     case "🤖 Настройки ИИ":
     case "🤖 Сменить модель":
         if (!isAdmin) return false;
@@ -148,33 +148,33 @@ if (text.startsWith('⚙️ Админ-панель')) {
         if (!isAdmin) return false;
         settings.useSearch = !settings.useSearch;
         storage.save(config.SETTINGS_FILE, userSettings);
-        return await ctx.reply(`🌐 Поиск ${settings.useSearch ? "включен" : "выключен"}`, menus.chatAI(settings));
+        return await ctx.reply(`🌐 Поиск ${settings.useSearch ? "включен" : "выключен"}`, menus.chatAI(settings)); */
 
     // --- ОБРАБОТКА КОНКРЕТНЫХ УСЛУГ: ТРЕНИНГИ ---
     case "✨ Курс-Путешествие":
-      settings.isAstroCheck = false;
-      storage.save(config.SETTINGS_FILE, userSettings);
-      return await ctx.reply(
-        `✨ <b>Твоя жизнь — это сказка, где ТЫ — Архитектор своей Истории</b>\n\n` +
-        `Если ты чувствуешь, что застрял в "Дне сурка", играешь роль второго плана, не знаешь куда идти или как найти свой ресурс, значит пора переписать сюжет. Мой метод объединяет <b>коучинг, сказкотерапию и символдраму</b>.\n\n` + 
-        `<b>Что мы сделаем в путешествии:</b>\n` +
-        `• Найдем твоих внутренних "Драконов", заберем у них ресурс или превратим в твоих защитников\n` +
-        `• Проложим маршрут к твоей истинной цели\n` +
-        `• Напишем терапевтическую сказку, которая станет твоим планом победы\n\n` +
-        `🎁 Нажми кнопку ниже, чтобы получить подарок — <b>практику «Встреча с Хранителем»</b> и почувствовать программу!`,
-        { 
-          parse_mode: 'HTML',
-          reply_markup: {
-            inline_keyboard: [
-              [{ text: '🎁 Получить подарок и программу', callback_data: 'funnel_gift' }],
-              [{ text: '📜 Стоимость и форматы участия:', callback_data: 'show_prices' } ],
-               [{text:"💳 Оплатить онлайн", callback_data:  "confirm_payment"}],
-             [{text:"✅ Я оплатил(а)", callback_data:  "i_paid"}],
-              [{ text: '✉️ Написать Марии', url: 'https://t.me/sherab_wangmo' }]
-            ]
-          }
-        }
-      );
+  settings.isAstroCheck = false;
+  storage.save(config.SETTINGS_FILE, userSettings);
+  return await ctx.reply(
+    `✨ <b>Твоя жизнь — это сказка, где ТЫ — Архитектор своей Истории</b>\n\n` +
+    `Если ты чувствуешь, что застрял в "Дне сурка", играешь роль второго плана, не знаешь куда идти или как найти свой ресурс, значит пора переписать сюжет. Мой метод объединяет <b>коучинг, сказкотерапию и символдраму</b>.\n\n` + 
+    `<b>Что мы сделаем в путешествии:</b>\n` +
+    `• Найдем твоих внутренних "Драконов", заберем у них ресурс или превратим в твоих защитников\n` +
+    `• Проложим маршрут к твоей истинной цели\n` +
+    `• Напишем терапевтическую сказку, которая станет твоим планом победы\n\n` +
+    `🎁 Нажми кнопку ниже, чтобы получить подарок — <b>практику «Встреча с Хранителем»</b> и почувствовать программу!`,
+    { 
+      parse_mode: 'HTML',
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: '🎁 Получить подарок и программу', callback_data: 'funnel_gift' }],
+          [{ text: '📜 Стоимость и форматы участия:', callback_data: 'show_prices' }],
+          [{ text: '💳 Оплатить онлайн', callback_data: 'confirm_payment' }],
+          [{ text: '✅ Я оплатил(а)', callback_data: 'i_paid' }],
+          [{ text: '✉️ Написать Марии', url: 'https://t.me/sherab_wangmo' }]
+        ]
+      }
+    }
+  );
 
     case "📈 Карта Пути (Сессия)":
     settings.isAstroCheck = false;
@@ -222,7 +222,8 @@ if (text.startsWith('⚙️ Админ-панель')) {
             parse_mode: 'HTML',
             ...Markup.inlineKeyboard([
                 [Markup.button.callback('🚀 Оставить заявку', 'order_web')],
-                [Markup.button.url('✉️ Обсудить в ЛС', 'https://t.me/sherab_wangmo')]
+                [Markup.button.url('✉️ Обсудить в ЛС', 'https://t.me/sherab_wangmo')],
+                [Markup.button.url('✉️ Портфолио', 'https://web.routes-dream.ru/')]
             ])
         }
       );

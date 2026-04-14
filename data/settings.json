@@ -19,11 +19,11 @@
     "lastBirthDate": "26.08.1983 12:25",
     "lastAstroGoal": "У меня нет ресурсов и сил",
     "fullPaymentStarted": true,
-    "fullPaymentAt": 1775838898018,
+    "fullPaymentAt": 1776172928333,
     "paymentType": "full",
     "fullPaid": true,
     "fullPaidAt": 1775840539858,
     "awaitingReceipt": false,
-    "paymentStep": null
+    "paymentStep": "receipt_received"
   }
 }

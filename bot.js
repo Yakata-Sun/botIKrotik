@@ -16,7 +16,7 @@ const handleMenu = require('./modules/handlers');
 const registerCommands = require('./modules/commands');
 const startBroadcast = require('./modules/broadcast');
 const handleBroadcast = require('./modules/broadcastHandler');
-const handleAIRequest = require('./modules/aiHandler');
+/* const handleAIRequest = require('./modules/aiHandler'); */
 const registerActions = require('./modules/actions');
 const funnel = require('./modules/funnel');
 const utils = require('./modules/utils');
@@ -140,7 +140,7 @@ if (!text) return;
     // --- 5. ОБРАБОТКА МЕНЮ (Услуги, Тренинги и т.д.) ---
     const menuHandled = await handleMenu(ctx, userSettings, userHistory);
     if (menuHandled) return;
-
+/* 
     // --- 6. БЫСТРАЯ СМЕНА МОДЕЛИ (Только для Админа) ---
     const selectedModelPath = config.MODELS[text]; 
     if (selectedModelPath && userId === config.ADMIN_ID) {
@@ -156,7 +156,7 @@ if (!text) return;
     } else {
         // Если пишет обычный пользователь (не в режиме чекапа и не кнопка меню)
         await ctx.reply("✨ Если вы хотите написать Марии, перейдите в ЛС https://t.me/sherab_wangmo'", { parse_mode: 'HTML' });
-    }
+    } */
 });
 /**
  * Запуск бота и вывод уведомления в консоль

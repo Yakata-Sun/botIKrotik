@@ -87,9 +87,9 @@ module.exports = {
         }
     }),
 
-    /**
+    /* /**
      * Настройка ИИ для админа
-     */
+    
     chatAI: (settings = {}) => {
         const isShort = settings.mode === 'short';
         const isSearch = settings.useSearch === true;
@@ -107,7 +107,7 @@ module.exports = {
                 resize_keyboard: true
             }
         };
-    },
+    }, */
 
     confirmBroadcast: () => ({
         reply_markup: {

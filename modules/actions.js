@@ -53,6 +53,9 @@ module.exports = (bot, { userSettings, astro, funnel, storage, config }) => {
         await ctx.reply("✨ Спасибо! Ваша заявка получена. Мария свяжется с вами в ближайшее время.");
     }
 });
+bot.action('skip_backpack_practice', async (ctx) => {
+    await ctx.reply('Ok, тогда на связи');
+});
 // В обработчике map-kouch:
 bot.action('map-kouch', async (ctx) => {
     const userId = ctx.from.id;
