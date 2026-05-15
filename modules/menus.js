@@ -9,11 +9,10 @@ const { Markup } = require('telegraf');
 module.exports = {
     /**
      * Главное меню (Home Screen)
-     * Задача: Максимально быстро вовлечь в бесплатный полезный продукт (Чекап).
      */
     main: (isAdmin = false, userCount = 0) => {
         let keyboard = [
-            [{ text: '🔮 Узнать свой Путь (Чекап)' }], // Самая большая кнопка-магнит
+            [{ text: '🔮 Астрочекап' }], 
             [{ text: '🎭 Мои Услуги' }, { text: '✍️ Задать вопрос' }],
             [{ text: '❓ Справка' }]
         ];
@@ -54,7 +53,7 @@ module.exports = {
         reply_markup: {
             keyboard: [
                 [{ text: '📈 Карта Пути (Сессия)' }, { text: '✨ Курс-Путешествие' }],
-                [{ text: '🔮 Повторить Чекап' }, { text: '⬅️ Назад в услуги' }]
+                [{ text: '🔮 Повторить Астрочекап' }, { text: '⬅️ Назад в услуги' }]
             ],
             resize_keyboard: true
         }
@@ -80,34 +79,11 @@ module.exports = {
         reply_markup: {
             keyboard: [
                 [{ text: '📢 Рассылка' }],
-                [{ text: '🤖 Настройки ИИ' }],
                 [{ text: '⬅️ В главное меню' }]
             ],
             resize_keyboard: true
         }
     }),
-
-    /* /**
-     * Настройка ИИ для админа
-    
-    chatAI: (settings = {}) => {
-        const isShort = settings.mode === 'short';
-        const isSearch = settings.useSearch === true;
-
-        return {
-            reply_markup: {
-                keyboard: [
-                    [
-                        { text: isSearch ? '✅ Поиск: ВКЛ' : '🌍 Поиск: ВЫКЛ' },
-                        { text: isShort ? '✅ Кратко' : '⚡️ Кратко' }
-                    ],
-                    [{ text: '🤖 Сменить модель' }, { text: '🧹 Очистить контекст' }],
-                    [{ text: '⬅️ Назад в админку' }]
-                ],
-                resize_keyboard: true
-            }
-        };
-    }, */
 
     confirmBroadcast: () => ({
         reply_markup: {

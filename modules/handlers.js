@@ -77,8 +77,8 @@ if (text.startsWith('⚙️ Админ-панель')) {
       storage.save(config.SETTINGS_FILE, userSettings);
       return await ctx.reply("Выберите раздел:", menus.main(isAdmin, userCount));
 
-    case "🔮 Узнать свой Путь (Чекап)":
-    case "🔮 Повторить Чекап":
+    case "🔮 Астрочекап":
+    case "🔮 Повторить Астрочекап":
       settings.isAstroCheck = true;
       storage.save(config.SETTINGS_FILE, userSettings);
       return await ctx.reply("✨ Привет! Я мастер китайской астрологии Ба Цзы. Напиши свою дату и время рождения (используй формат дд.мм.гггг чч:мм), чтобы я построил твою карту.");
@@ -124,31 +124,6 @@ if (text.startsWith('⚙️ Админ-панель')) {
         storage.save(config.SETTINGS_FILE, userSettings);
         return await ctx.reply("Пришлите контент для рассылки (текст или фото):", menus.confirmBroadcast());
 
-/*     // --- НАСТРОЙКИ ИИ (АДМИН) ---
-    case "🤖 Настройки ИИ":
-    case "🤖 Сменить модель":
-        if (!isAdmin) return false;
-        return await ctx.reply("Настройки поиска:", menus.chatAI(settings));
-
-    case "✅ Кратко":
-    case "⚡️ Кратко":
-      if (!isAdmin) return false;
-      settings.mode = "short";
-      storage.save(config.SETTINGS_FILE, userSettings);
-      return await ctx.reply("🚀 Режим: Кратко.", menus.chatAI(settings));
-
-    case "🧹 Очистить контекст":
-      if (!isAdmin) return false;
-      userHistory[userId] = []; 
-      storage.save(config.HISTORY_FILE, userHistory);
-      return await ctx.reply("🧹 Контекст очищен!", menus.chatAI(settings));
-
-    case "🌍 Поиск: ВКЛ":
-    case "🌍 Поиск: ВЫКЛ":
-        if (!isAdmin) return false;
-        settings.useSearch = !settings.useSearch;
-        storage.save(config.SETTINGS_FILE, userSettings);
-        return await ctx.reply(`🌐 Поиск ${settings.useSearch ? "включен" : "выключен"}`, menus.chatAI(settings)); */
 
     // --- ОБРАБОТКА КОНКРЕТНЫХ УСЛУГ: ТРЕНИНГИ ---
     case "✨ Курс-Путешествие":
